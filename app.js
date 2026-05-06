@@ -59,10 +59,24 @@ function money(value) {
   }).format(value || 0);
 }
 
+function wholeMoney(value) {
+  return new Intl.NumberFormat("he-IL", {
+    style: "currency",
+    currency: "ILS",
+    maximumFractionDigits: 0,
+  }).format(value || 0);
+}
+
 function hours(value) {
   return new Intl.NumberFormat("he-IL", {
     maximumFractionDigits: 2,
   }).format(value || 0);
+}
+
+function formatDate(value) {
+  if (!value) return "";
+  const date = new Date(`${value}T00:00:00`);
+  return new Intl.DateTimeFormat("he-IL").format(date);
 }
 
 function numberFromInput(value, fallback = 0) {
@@ -214,6 +228,7 @@ function App() {
       ]),
       h(Summary, { quote }),
     ]),
+    h(ProposalPreview, { form, quote }),
   ]);
 }
 
@@ -385,6 +400,168 @@ function Summary({ quote }) {
 
 function Metric({ label, value }) {
   return h("div", { className: "metric" }, [h("span", null, label), h("strong", null, value)]);
+}
+
+function ProposalPreview({ form, quote }) {
+  const result = quote.result;
+
+  return h("section", { className: "proposal-section" }, [
+    h("div", { className: "proposal-toolbar" }, [
+      h("div", null, [
+        h("h2", null, "הצעת מחיר מוכנה"),
+        h("p", null, "תצוגה על דף ממותג עם לוגו, מוכנה להדפסה או שמירה כ-PDF"),
+      ]),
+      h("button", { className: "button primary", type: "button", onClick: () => window.print() }, "הדפסה / שמירה כ-PDF"),
+    ]),
+    quote.error ? h("div", { className: "error" }, quote.error) : null,
+    result ? h("div", { className: "proposal-paper" }, [
+      h(ProposalIntroPage, { form }),
+      h(ProposalPricingPage, { result }),
+      h(ProposalTermsPage, null),
+    ]) : null,
+  ]);
+}
+
+function ProposalPage({ children }) {
+  return h("article", { className: "proposal-page" }, [
+    h("img", { className: "proposal-logo", src: "image1.png", alt: "לוגו קואופרטיב אמל" }),
+    h("div", { className: "proposal-content" }, children),
+    h(ProposalFooter),
+  ]);
+}
+
+function ProposalFooter() {
+  return h("footer", { className: "proposal-footer" }, [
+    "קואופרטיב ניקיון תנז׳יף - אגודה שיתופית לשירותים בע״מ | טלפון 050-5731830 | פקס 077-444-8994",
+    h("br"),
+    "HaNikayonCoop@gmail.com | גבעת חביבה, ד.נ מנשה, 3785000",
+  ]);
+}
+
+function ProposalIntroPage({ form }) {
+  const clientName = form.clientName.trim() || "לקוח חדש";
+
+  return h(ProposalPage, null, [
+      h("div", { className: "proposal-date" }, formatDate(form.quoteDate)),
+      h("p", null, "לכבוד"),
+      h("p", { className: "proposal-client" }, clientName),
+      h("h2", { className: "proposal-title" }, "הצעת מחיר עבור שירותי ניקיון"),
+      proposalIntroParagraphs().map((text, index) => h("p", { key: index }, text)),
+      h("p", { className: "proposal-signature" }, "בברכה,"),
+      h("p", { className: "proposal-signature" }, "קואופרטיב אמל"),
+    ]);
+}
+
+function ProposalPricingPage({ result }) {
+  const cost = proposalCostBreakdown(result);
+  const groups = proposalWorkforceRows(result);
+  const showSites = result.sites.length > 1;
+
+  return h(ProposalPage, null, [
+      h("h2", { className: "proposal-title" }, "מפרט ניקיון שוטף - הצעת מחיר ראשונית"),
+      h("table", { className: "proposal-table cost-table" }, [
+        h("thead", null, h("tr", null, [
+          h("th", null, "פירוט"),
+          h("th", null, "מרכיבי העלות"),
+          h("th", null, "מרכיבי העלות"),
+        ])),
+        h("tbody", null, [
+          h("tr", null, [
+            h("td", null, "עלות לשעת ניקיון"),
+            h("td", null, cost.map((row) => h("div", { key: row.label }, row.label))),
+            h("td", null, cost.map((row) => h("div", { key: row.label }, money(row.hourly)))),
+          ]),
+          h("tr", { className: "total-row" }, [
+            h("td", { colSpan: 2 }, "סה״כ עלות שעתית לפני מע״מ"),
+            h("td", null, wholeMoney(result.final_price)),
+          ]),
+        ]),
+      ]),
+      h("h3", { className: "proposal-subtitle" }, "כוח אדם והיקף עבודה"),
+      h("table", { className: "proposal-table" }, [
+        h("thead", null, h("tr", null, [
+          showSites ? h("th", null, "אתר") : null,
+          h("th", null, "תפקיד"),
+          h("th", null, "עובדות"),
+          h("th", null, "שעות"),
+          h("th", null, "תעריף שעתי"),
+          h("th", null, "אומדן חודשי"),
+        ].filter(Boolean))),
+        h("tbody", null, groups.map((row, index) => h("tr", { key: index }, [
+          showSites ? h("td", null, row.siteName) : null,
+          h("td", null, row.role),
+          h("td", null, hours(row.workers)),
+          h("td", null, row.hoursText),
+          h("td", null, wholeMoney(row.hourlyRate)),
+          h("td", null, money(row.monthlyPrice)),
+        ].filter(Boolean)))),
+      ]),
+      h("div", { className: "proposal-total" }, [
+        h("span", null, "סה״כ אומדן חודשי"),
+        h("strong", null, money(result.monthly_price)),
+      ]),
+    ]);
+}
+
+function ProposalTermsPage() {
+  return h(ProposalPage, null, [
+      h("h2", { className: "proposal-title" }, "תנאים והבהרות"),
+      h("ul", { className: "proposal-terms" }, proposalTermsParagraphs().map((text, index) => h("li", { key: index }, text))),
+      h("h3", { className: "proposal-subtitle" }, "פרטי קשר"),
+      h("p", null, "שירה מזרחי | 050-5731830 | HaNikayonCoop@gmail.com"),
+    ]);
+}
+
+function proposalIntroParagraphs() {
+  return [
+    "בהמשך לשיחתנו אנו מודות לך על האפשרות להגיש הצעה לשירותי ניקיון.",
+    "קואופרטיב אמל הוא עסק חברתי בבעלות עובדות הניקיון עצמן, שקם במטרה להיות אלטרנטיבה הוגנת לחברות הקבלן.",
+    "העובדות מקבלות ליווי, הכשרות ותנאי העסקה הוגנים, לצד פיקוח מקצועי ושמירה על איכות השירות.",
+    "נשמח לספק עבורכם שירותי ניקיון מקצועיים, יציבים ושקופים.",
+  ];
+}
+
+function proposalTermsParagraphs() {
+  return [
+    "חשבון החיוב החודשי נעשה בהתאם לדיווח השעות בפועל.",
+    "מסגרת השעות גמישה וניתנת לעדכון לפי הצרכים בשטח ובתיאום עם הלקוח.",
+    "העלות השעתית כוללת את כלל רכיבי השכר, הנסיעות, התקורה והרווח התפעולי.",
+    "רכש ואספקת חומרי ניקיון יבוצעו על ידי הלקוח, אלא אם סוכם אחרת.",
+    "ההצעה אינה כוללת מע״מ.",
+  ];
+}
+
+function proposalCostBreakdown(result) {
+  const monthlyHours = result.monthly_hours || 1;
+  const totals = result.sites.reduce((sum, site) => {
+    site.work_groups.forEach((group) => {
+      sum.salary += group.breakdown.salary.monthly_regular_salary_cost || 0;
+      sum.overtime += group.breakdown.overtime.monthly_overtime_cost || 0;
+      sum.travel += (group.breakdown.travel.monthly_travel_cost || 0) + (group.breakdown.travel.monthly_driver_bonus_cost || 0);
+      sum.travelSocial += group.breakdown.travel.monthly_travel_social_cost || 0;
+    });
+    return sum;
+  }, { salary: 0, overtime: 0, travel: 0, travelSocial: 0 });
+
+  return [
+    { label: "שכר ועלויות מעביד", hourly: (totals.salary + totals.overtime) / monthlyHours },
+    { label: "נסיעות", hourly: totals.travel / monthlyHours },
+    { label: "סוציאליות על נסיעות 5%", hourly: totals.travelSocial / monthlyHours },
+    { label: "תקורה תפעולית ורווח", hourly: result.profit / monthlyHours },
+  ];
+}
+
+function proposalWorkforceRows(result) {
+  return result.sites.flatMap((site) =>
+    site.work_groups.map((group) => ({
+      siteName: site.site.name,
+      role: group.work_group.name,
+      workers: group.work_group.workers,
+      hoursText: `${hours(group.work_group.days_per_week)} ימים בשבוע, ${hours(group.work_group.hours_per_day)} שעות ביום`,
+      hourlyRate: group.final_price,
+      monthlyPrice: group.monthly_price,
+    }))
+  );
 }
 
 function Field({ label, value, onChange, placeholder, readOnly }) {

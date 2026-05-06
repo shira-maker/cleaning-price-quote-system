@@ -1,17 +1,1749 @@
 <!doctype html>
 <html lang="he" dir="rtl">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>מערכת תמחור שירותי ניקיון</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div id="root"></div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title></title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f6f7f9;
+      color: #1f2933;
+    }
+    header {
+      background: #fff;
+      border-bottom: 1px solid #dde3ea;
+      padding: 20px 28px;
+    }
+    h1, h2, h3, h4 { margin: 0; }
+    header p { margin: 6px 0 0; color: #667085; }
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 20px;
+      padding: 20px 28px 32px;
+      align-items: start;
+    }
+    section, aside {
+      background: #fff;
+      border: 1px solid #dde3ea;
+      border-radius: 8px;
+    }
+    section { padding: 18px; }
+    aside {
+      position: sticky;
+      top: 16px;
+      overflow: hidden;
+    }
+    .summary-header {
+      padding: 18px;
+      border-bottom: 1px solid #e6ebf0;
+    }
+    .summary-header p { margin: 4px 0 0; color: #667085; }
+    .summary-body {
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(130px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    label {
+      display: grid;
+      gap: 6px;
+      color: #475467;
+      font-size: 14px;
+    }
+    input, select, button {
+      font: inherit;
+    }
+    input, select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid #cbd5df;
+      border-radius: 6px;
+      padding: 8px 10px;
+      background: #fff;
+      color: #111827;
+    }
+    input[readonly] { background: #f2f4f7; }
+    button {
+      min-height: 38px;
+      border: 1px solid #a7b4c2;
+      border-radius: 6px;
+      padding: 8px 12px;
+      background: #fff;
+      color: #1f2933;
+      cursor: pointer;
+    }
+    button:hover { background: #f3f6f9; }
+    .primary {
+      border-color: #8f7cc2;
+      background: #b4a7d6;
+      color: #fff;
+    }
+    .primary:hover { background: #9f8ccc; }
+    .danger {
+      border-color: #d0a2a2;
+      color: #9d2929;
+    }
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .site {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid #e6ebf0;
+    }
+    .group {
+      margin-top: 12px;
+      padding: 14px;
+      border: 1px solid #e1e7ee;
+      border-radius: 8px;
+      background: #fbfcfd;
+    }
+    .group-grid {
+      display: grid;
+      grid-template-columns: 1.4fr repeat(3, minmax(120px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+      align-items: end;
+    }
+    .schedule-wrap {
+      margin-top: 14px;
+      overflow-x: auto;
+    }
+    .schedule-table {
+      min-width: 760px;
+      table-layout: fixed;
+    }
+    .schedule-table th,
+    .schedule-table td {
+      text-align: center;
+      padding: 8px;
+    }
+    .schedule-table th:first-child {
+      width: 120px;
+      text-align: right;
+    }
+    .schedule-table input {
+      min-height: 34px;
+      text-align: center;
+      padding: 6px;
+    }
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+    }
+    .toggle input {
+      width: 18px;
+      height: 18px;
+      min-height: auto;
+    }
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid #eef2f5;
+      padding-bottom: 10px;
+    }
+    .metric strong { font-size: 18px; }
+    .site-summary {
+      margin-top: 8px;
+      padding-top: 12px;
+      border-top: 1px solid #dce3ea;
+    }
+    .error {
+      padding: 10px 12px;
+      border: 1px solid #f1b5b5;
+      background: #fff4f4;
+      color: #912020;
+      border-radius: 6px;
+    }
+    .proposal {
+      margin: 0 28px 36px;
+      padding: 0;
+      overflow: hidden;
+    }
+    .proposal-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 18px;
+      border-bottom: 1px solid #e6ebf0;
+      background: #fbfcfd;
+    }
+    .proposal-toolbar p {
+      margin: 4px 0 0;
+      color: #667085;
+    }
+    .toolbar-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .proposal-paper {
+      padding: 28px;
+      background: #fff;
+      font-family: Narkisim, "Times New Roman", serif;
+      font-size: 12pt;
+      line-height: 1.35;
+    }
+    .proposal-page {
+      width: 210mm;
+      height: 297mm;
+      min-height: 297mm;
+      margin: 0 auto 22px;
+      padding: 23mm 22mm 48mm;
+      background: #fff;
+      box-shadow: 0 2px 16px rgba(16, 24, 40, 0.12);
+      position: relative;
+    }
+    .proposal-page:last-child {
+      margin-bottom: 0;
+    }
+    .proposal-logo {
+      display: block;
+      width: 34mm;
+      max-height: 18mm;
+      object-fit: contain;
+      position: absolute;
+      top: 10mm;
+      left: 18mm;
+    }
+    .proposal-footer {
+      position: absolute;
+      right: 22mm;
+      left: 22mm;
+      bottom: 12mm;
+      border-top: 1px solid #d9d2e9;
+      padding-top: 6px;
+      font-size: 10.5pt;
+      line-height: 1.35;
+      color: #333;
+      text-align: center;
+    }
+    .proposal-head {
+      display: block;
+      border-bottom: 0;
+      padding-bottom: 8px;
+      margin-bottom: 18px;
+    }
+    .proposal-head h2 {
+      font-size: 26px;
+      margin-bottom: 8px;
+    }
+    .proposal-date {
+      text-align: right;
+      margin-bottom: 18px;
+    }
+    .proposal-recipient {
+      margin-bottom: 18px;
+      line-height: 1.6;
+    }
+    .proposal-title {
+      text-align: center;
+      font-size: 16pt;
+      font-weight: 700;
+      text-decoration: underline;
+      margin: 16px 0 20px;
+    }
+    .proposal-meta {
+      min-width: 220px;
+      display: grid;
+      gap: 8px;
+      color: #475467;
+    }
+    .proposal-intro,
+    .terms,
+    .contact {
+      line-height: 1.7;
+      color: #344054;
+    }
+    .proposal-intro p,
+    .terms p,
+    .contact p {
+      margin: 0 0 6px;
+      text-align: justify;
+    }
+    .terms-list {
+      margin: 0;
+      padding: 0 22px 0 0;
+      line-height: 1.55;
+    }
+    .terms-list li {
+      margin-bottom: 7px;
+      text-align: justify;
+    }
+    .proposal-signature {
+      margin-top: 20px;
+      line-height: 1.7;
+      text-align: right;
+    }
+    .proposal-section-title {
+      text-align: center;
+      font-size: 15pt;
+      font-weight: 700;
+      margin: 28px 0 14px;
+    }
+    .proposal-block {
+      margin-top: 24px;
+    }
+    .proposal-block h3 {
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+    .proposal-cost-table th {
+      background: #d9d2e9;
+    }
+    .proposal-cost-table tfoot td {
+      background: #b4a7d6;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+    }
+    th, td {
+      border: 1px solid #d8e0e8;
+      padding: 10px;
+      text-align: right;
+      vertical-align: top;
+    }
+    th {
+      background: #d9d2e9;
+      color: #1f2933;
+    }
+    tfoot td {
+      font-weight: bold;
+      background: #b4a7d6;
+    }
+    .total-line {
+      margin-top: 18px;
+      padding: 16px;
+      border: 1px solid #b4a7d6;
+      border-radius: 8px;
+      background: #d9d2e9;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      font-size: 18px;
+    }
+    .total-line strong {
+      font-size: 24px;
+      color: #1f2933;
+    }
+    @media (max-width: 1100px) {
+      main { grid-template-columns: 1fr; }
+      aside { position: static; }
+      .grid, .group-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .proposal-head { flex-direction: column; }
+    }
+    @media (max-width: 620px) {
+      header, main { padding-inline: 16px; }
+      .proposal { margin-inline: 16px; }
+      .proposal-paper { padding: 18px; }
+      .grid, .group-grid { grid-template-columns: 1fr; }
+      .row { align-items: stretch; flex-direction: column; }
+    }
+    @media print {
+      @page {
+        size: A4;
+        margin: 0;
+      }
+      body { background: #fff; }
+      header, main, .proposal-toolbar { display: none; }
+      .proposal {
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+      }
+      .proposal-paper { padding: 0; }
+      .proposal-page {
+        width: 210mm;
+        height: 297mm;
+        min-height: 297mm;
+        margin: 0;
+        padding: 18mm 18mm 45mm;
+        box-shadow: none;
+        page-break-after: always;
+      }
+      .proposal-page:last-child {
+        page-break-after: auto;
+      }
+      .proposal-head { break-inside: avoid; }
+      .proposal-block, table, tr { break-inside: avoid; }
+      th { background: #d9d2e9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      tfoot td { background: #b4a7d6 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .total-line { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>מערכת תמחור שירותי ניקיון</h1>
+    <p>קובץ פנימי שעובד ללא שרת וללא התקנות</p>
+  </header>
 
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="pricingEngine.js"></script>
-    <script src="app.js"></script>
-  </body>
+  <main>
+    <section>
+      <h2>פרטי לקוח</h2>
+      <div class="grid">
+        <label>שם לקוח<input id="clientName" placeholder="לדוגמה: בית החולים הסקוטי"></label>
+        <label>תאריך<input id="quoteDate" type="date"></label>
+        <label>בתוקף עד<input id="validUntil" type="date"></label>
+        <label>אשת קשר<select id="contact"><option>שירה מזרחי</option></select></label>
+        <label>רווח מתוך מחיר סופי<input id="margin" type="number" min="0.10" max="0.15" step="0.005" value="0.15"></label>
+      </div>
+
+      <div class="row" style="margin-top: 22px;">
+        <h2>אתרים</h2>
+        <button class="primary" id="addSite">הוספת אתר</button>
+      </div>
+      <div id="sites"></div>
+    </section>
+
+    <aside>
+      <div class="summary-header">
+        <h2>סיכום הצעה</h2>
+        <p>מתעדכן בזמן אמת</p>
+      </div>
+      <div class="summary-body" id="summary"></div>
+    </aside>
+  </main>
+
+  <section class="proposal">
+    <div class="proposal-toolbar">
+      <div>
+        <h2>תצוגת הצעת מחיר</h2>
+        <p>מסמך נקי להדפסה או שמירה כ־PDF</p>
+      </div>
+      <div class="toolbar-actions">
+        <button id="exportWord">ייצוא ל-Word</button>
+        <button id="exportExcel">ייצוא לאקסל</button>
+        <button class="primary" id="printProposal">הדפסה / שמירה כ־PDF</button>
+      </div>
+    </div>
+    <div class="proposal-paper" id="proposalPreview"></div>
+  </section>
+
+  <template id="siteTemplate">
+    <div class="site">
+      <div class="row">
+        <h3 class="siteTitle"></h3>
+        <button class="danger removeSite">הסרת אתר</button>
+      </div>
+      <div class="grid">
+        <label>שם האתר<input class="siteName"></label>
+        <label>ק״מ לכיוון אחד<input class="km" type="number" min="0" step="1"></label>
+        <label>נסיעות למשמרת<input class="trips" type="number" min="0" step="0.5"></label>
+        <label>בונוס מסיעה יומי<input class="driverBonus" type="number" min="0" step="0.5"></label>
+      </div>
+      <div class="row" style="margin-top: 18px;">
+        <h3>קבוצות עבודה</h3>
+        <button class="addGroup">הוספת קבוצה</button>
+      </div>
+      <div class="groups"></div>
+    </div>
+  </template>
+
+  <template id="groupTemplate">
+    <div class="group">
+      <div class="row">
+        <h4 class="groupTitle"></h4>
+        <button class="danger removeGroup">הסרת קבוצה</button>
+      </div>
+      <div class="group-grid">
+        <label>שם תפקיד<input class="role"></label>
+        <label>עובדות<input class="workers" type="number" min="1" step="1"></label>
+        <label>שכר שעתי<input class="wage" type="number" min="0" step="1"></label>
+      </div>
+      <div class="schedule-wrap">
+        <table class="schedule-table">
+          <thead>
+            <tr>
+              <th>פירוט שבועי</th>
+              <th>א׳</th>
+              <th>ב׳</th>
+              <th>ג׳</th>
+              <th>ד׳</th>
+              <th>ה׳</th>
+              <th>ו׳</th>
+              <th>שבת</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="regularRow">
+              <th>שעות רגילות</th>
+            </tr>
+            <tr class="overtimeRow">
+              <th>שעות נוספות</th>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </template>
+
+  <script src="logo-data.js"></script>
+  <script>
+    const WEEKS_PER_MONTH = 4.3;
+    const KM_COST_PER_KM = 1;
+    const TRAVEL_SOCIAL_RATE = 0.05;
+    const WEEK_DAYS = [
+      { key: "sun", label: "א׳", isShabbat: false },
+      { key: "mon", label: "ב׳", isShabbat: false },
+      { key: "tue", label: "ג׳", isShabbat: false },
+      { key: "wed", label: "ד׳", isShabbat: false },
+      { key: "thu", label: "ה׳", isShabbat: false },
+      { key: "fri", label: "ו׳", isShabbat: false },
+      { key: "sat", label: "שבת", isShabbat: true }
+    ];
+    const sites = [];
+
+    const formatMoney = (value) => new Intl.NumberFormat("he-IL", {
+      style: "currency",
+      currency: "ILS",
+      maximumFractionDigits: 2
+    }).format(value || 0);
+
+    const formatWholeMoney = (value) => new Intl.NumberFormat("he-IL", {
+      style: "currency",
+      currency: "ILS",
+      maximumFractionDigits: 0
+    }).format(value || 0);
+
+    const formatNumber = (value) => new Intl.NumberFormat("he-IL", {
+      maximumFractionDigits: 2
+    }).format(value || 0);
+
+    function id(prefix) {
+      return prefix + "-" + Math.random().toString(36).slice(2, 9);
+    }
+
+    function addDays(date, days) {
+      const copy = new Date(date);
+      copy.setDate(copy.getDate() + days);
+      return copy;
+    }
+
+    function localDateValue(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return year + "-" + month + "-" + day;
+    }
+
+    function newGroup() {
+      return {
+        id: id("group"),
+        role: "עובדת ניקיון",
+        workers: 1,
+        wage: 39.11,
+        schedule: {
+          sun: { hours: 6, overtime: 0 },
+          mon: { hours: 6, overtime: 0 },
+          tue: { hours: 6, overtime: 0 },
+          wed: { hours: 6, overtime: 0 },
+          thu: { hours: 6, overtime: 0 },
+          fri: { hours: 0, overtime: 0 },
+          sat: { hours: 0, overtime: 0 }
+        }
+      };
+    }
+
+    function newSite() {
+      return {
+        id: id("site"),
+        name: "אתר חדש",
+        km: 8,
+        trips: 1,
+        driverBonus: 0,
+        groups: [newGroup()]
+      };
+    }
+
+    function number(value, fallback) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function calculateGroup(group, site, margin) {
+      if (margin < 0.1 || margin > 0.15) throw new Error("הרווח חייב להיות בין 10% ל־15%");
+
+      const hourlyBase = group.wage * 1.5;
+      const normalizedSchedule = normalizeSchedule(group);
+      let weeklyRegularHours = 0;
+      let weeklyOvertimeHours = 0;
+      let weeklyRegularCostPerWorker = 0;
+      let weeklyOvertimeCostPerWorker = 0;
+      let activeDaysPerWeek = 0;
+
+      WEEK_DAYS.forEach(day => {
+        const daySchedule = normalizedSchedule[day.key];
+        const regularHours = daySchedule.hours;
+        const overtimeHours = daySchedule.overtime;
+        const totalHours = regularHours + overtimeHours;
+
+        if (totalHours > 12) {
+          throw new Error("אין להזין יותר מ־12 שעות ביום בקבוצת עבודה");
+        }
+
+        if (totalHours > 0) activeDaysPerWeek += 1;
+
+        const shabbatMultiplier = day.isShabbat ? 1.5 : 1;
+        const regularRate = hourlyBase * shabbatMultiplier;
+        const firstOvertime = Math.min(overtimeHours, 2);
+        const extraOvertime = Math.max(overtimeHours - 2, 0);
+        const overtime125 = regularRate * 1.25;
+        const overtime150 = regularRate * 1.5;
+
+        weeklyRegularHours += regularHours;
+        weeklyOvertimeHours += overtimeHours;
+        weeklyRegularCostPerWorker += regularHours * regularRate;
+        weeklyOvertimeCostPerWorker += firstOvertime * overtime125 + extraOvertime * overtime150;
+      });
+
+      if (weeklyRegularHours <= 0) {
+        throw new Error("יש להזין לפחות שעת עבודה רגילה אחת בשבוע");
+      }
+
+      const monthlyHours = group.workers * weeklyRegularHours * WEEKS_PER_MONTH;
+      const monthlyOvertimeHours = group.workers * weeklyOvertimeHours * WEEKS_PER_MONTH;
+      const regularCost = group.workers * weeklyRegularCostPerWorker * WEEKS_PER_MONTH;
+      const overtimeCost = group.workers * weeklyOvertimeCostPerWorker * WEEKS_PER_MONTH;
+      const dailyTravel = site.km * 2 * site.trips * KM_COST_PER_KM;
+      const dailyDriverBonus = Math.max(0, number(site.driverBonus, 0));
+      const travelCost = activeDaysPerWeek * WEEKS_PER_MONTH * dailyTravel;
+      const driverBonusCost = activeDaysPerWeek * WEEKS_PER_MONTH * dailyDriverBonus;
+      const travelAndDriverBonusCost = travelCost + driverBonusCost;
+      const travelSocialCost = travelAndDriverBonusCost * TRAVEL_SOCIAL_RATE;
+      const monthlyCost = regularCost + overtimeCost + travelAndDriverBonusCost + travelSocialCost;
+      const hourlyCost = monthlyCost / monthlyHours;
+      const finalPrice = priceFromCostAndFinalMargin(hourlyCost, margin);
+      const monthlyPrice = finalPrice * monthlyHours;
+      const baseMonthlyCost = monthlyHours * group.wage;
+      const socialMonthlyCost = regularCost + overtimeCost - baseMonthlyCost;
+
+      return {
+        role: group.role,
+        workers: group.workers,
+        weeklySchedule: normalizedSchedule,
+        scheduleSummary: formatScheduleSummary(normalizedSchedule),
+        activeDaysPerWeek,
+        weeklyRegularHours,
+        weeklyOvertimeHours,
+        monthlyOvertimeHours,
+        hoursPerDay: weeklyRegularHours / activeDaysPerWeek,
+        overtimeHoursPerDay: activeDaysPerWeek > 0 ? weeklyOvertimeHours / activeDaysPerWeek : 0,
+        hourlyWage: group.wage,
+        hasShabbatHours: normalizedSchedule.sat.hours + normalizedSchedule.sat.overtime > 0,
+        daysPerWeek: activeDaysPerWeek,
+        hourlyCost,
+        finalPrice,
+        monthlyHours,
+        monthlyCost,
+        monthlyPrice,
+        profit: monthlyPrice - monthlyCost,
+        breakdown: {
+          baseMonthlyCost,
+          socialMonthlyCost,
+          travelMonthlyCost: travelCost,
+          driverBonusMonthlyCost: driverBonusCost,
+          travelSocialMonthlyCost: travelSocialCost,
+          overheadProfitMonthly: monthlyPrice - monthlyCost,
+          baseHourlyCost: baseMonthlyCost / monthlyHours,
+          socialHourlyCost: socialMonthlyCost / monthlyHours,
+          travelHourlyCost: travelCost / monthlyHours,
+          driverBonusHourlyCost: driverBonusCost / monthlyHours,
+          travelSocialHourlyCost: travelSocialCost / monthlyHours,
+          overheadProfitHourly: finalPrice - hourlyCost,
+          totalHourlyCost: finalPrice
+        }
+      };
+    }
+
+    function calculateQuote() {
+      const margin = clamp(number(document.getElementById("margin").value, 0.15), 0.1, 0.15);
+      const calculatedSites = sites.map(site => {
+        const groups = site.groups.map(group => calculateGroup(group, site, margin));
+        const monthlyHours = groups.reduce((sum, group) => sum + group.monthlyHours, 0);
+        const monthlyCost = groups.reduce((sum, group) => sum + group.monthlyCost, 0);
+        const monthlyPrice = groups.reduce((sum, group) => sum + group.monthlyPrice, 0);
+        return {
+          name: site.name,
+          groups,
+          monthlyHours,
+          monthlyCost,
+          monthlyPrice,
+          hourlyCost: monthlyCost / monthlyHours,
+          finalPrice: monthlyPrice / monthlyHours,
+          profit: monthlyPrice - monthlyCost,
+          breakdown: sumBreakdown(groups)
+        };
+      });
+      const monthlyHours = calculatedSites.reduce((sum, site) => sum + site.monthlyHours, 0);
+      const monthlyCost = calculatedSites.reduce((sum, site) => sum + site.monthlyCost, 0);
+      const monthlyPrice = calculatedSites.reduce((sum, site) => sum + site.monthlyPrice, 0);
+      return {
+        sites: calculatedSites,
+        monthlyHours,
+        monthlyCost,
+        monthlyPrice,
+        hourlyCost: monthlyCost / monthlyHours,
+        finalPrice: monthlyPrice / monthlyHours,
+        profit: monthlyPrice - monthlyCost,
+        breakdown: sumBreakdown(calculatedSites)
+      };
+    }
+
+    function priceFromCostAndFinalMargin(cost, margin) {
+      return cost / (1 - margin);
+    }
+
+    function normalizeSchedule(group) {
+      if (!group.schedule) {
+        group.schedule = {};
+        WEEK_DAYS.forEach((day, index) => {
+          const isActive = index < Math.max(0, Math.min(7, group.days || 0));
+          group.schedule[day.key] = {
+            hours: isActive ? group.hours || 0 : 0,
+            overtime: isActive ? group.overtime || 0 : 0
+          };
+        });
+      }
+
+      WEEK_DAYS.forEach(day => {
+        if (!group.schedule[day.key]) {
+          group.schedule[day.key] = { hours: 0, overtime: 0 };
+        }
+        group.schedule[day.key].hours = Math.max(0, number(group.schedule[day.key].hours, 0));
+        group.schedule[day.key].overtime = Math.max(0, number(group.schedule[day.key].overtime, 0));
+      });
+
+      return group.schedule;
+    }
+
+    function formatScheduleSummary(schedule) {
+      return WEEK_DAYS
+        .map(day => {
+          const hours = schedule[day.key].hours;
+          const overtime = schedule[day.key].overtime;
+          if (hours + overtime <= 0) return "";
+          return day.label + " " + formatNumber(hours) + (overtime > 0 ? " + " + formatNumber(overtime) + " נוספות" : "");
+        })
+        .filter(Boolean)
+        .join(", ");
+    }
+
+    function sumBreakdown(items) {
+      const monthlyHours = items.reduce((sum, item) => sum + item.monthlyHours, 0);
+      const totals = items.reduce((sum, item) => {
+        const breakdown = item.breakdown;
+        sum.baseMonthlyCost += breakdown.baseMonthlyCost;
+        sum.socialMonthlyCost += breakdown.socialMonthlyCost;
+        sum.travelMonthlyCost += breakdown.travelMonthlyCost;
+        sum.driverBonusMonthlyCost += breakdown.driverBonusMonthlyCost;
+        sum.travelSocialMonthlyCost += breakdown.travelSocialMonthlyCost;
+        sum.overheadProfitMonthly += breakdown.overheadProfitMonthly;
+        return sum;
+      }, {
+        baseMonthlyCost: 0,
+        socialMonthlyCost: 0,
+        travelMonthlyCost: 0,
+        driverBonusMonthlyCost: 0,
+        travelSocialMonthlyCost: 0,
+        overheadProfitMonthly: 0
+      });
+
+      return {
+        ...totals,
+        baseHourlyCost: totals.baseMonthlyCost / monthlyHours,
+        socialHourlyCost: totals.socialMonthlyCost / monthlyHours,
+        travelHourlyCost: totals.travelMonthlyCost / monthlyHours,
+        driverBonusHourlyCost: totals.driverBonusMonthlyCost / monthlyHours,
+        travelSocialHourlyCost: totals.travelSocialMonthlyCost / monthlyHours,
+        overheadProfitHourly: totals.overheadProfitMonthly / monthlyHours,
+        totalHourlyCost: (totals.baseMonthlyCost + totals.socialMonthlyCost + totals.travelMonthlyCost + totals.driverBonusMonthlyCost + totals.travelSocialMonthlyCost + totals.overheadProfitMonthly) / monthlyHours
+      };
+    }
+
+    function render() {
+      const sitesRoot = document.getElementById("sites");
+      sitesRoot.innerHTML = "";
+      sites.forEach((site, siteIndex) => renderSite(sitesRoot, site, siteIndex));
+      renderSummary();
+      renderProposal();
+    }
+
+    function renderSite(root, site, siteIndex) {
+      const template = document.getElementById("siteTemplate").content.cloneNode(true);
+      const node = template.querySelector(".site");
+      template.querySelector(".siteTitle").textContent = "אתר " + (siteIndex + 1);
+
+      bindText(template.querySelector(".siteName"), site.name, value => site.name = value || "אתר חדש");
+      bindNumber(template.querySelector(".km"), site.km, value => site.km = Math.max(0, value));
+      bindNumber(template.querySelector(".trips"), site.trips, value => site.trips = Math.max(0, value));
+      bindNumber(template.querySelector(".driverBonus"), site.driverBonus || 0, value => site.driverBonus = Math.max(0, value));
+
+      const removeButton = template.querySelector(".removeSite");
+      removeButton.disabled = sites.length === 1;
+      removeButton.addEventListener("click", () => {
+        if (sites.length > 1) {
+          sites.splice(siteIndex, 1);
+          render();
+        }
+      });
+
+      template.querySelector(".addGroup").addEventListener("click", () => {
+        site.groups.push(newGroup());
+        render();
+      });
+
+      const groupsRoot = template.querySelector(".groups");
+      site.groups.forEach((group, groupIndex) => renderGroup(groupsRoot, site, group, groupIndex));
+      root.appendChild(node);
+    }
+
+    function renderGroup(root, site, group, groupIndex) {
+      const template = document.getElementById("groupTemplate").content.cloneNode(true);
+      const node = template.querySelector(".group");
+      template.querySelector(".groupTitle").textContent = "קבוצה " + (groupIndex + 1);
+
+      bindText(template.querySelector(".role"), group.role, value => group.role = value || "עובדת ניקיון");
+      bindNumber(template.querySelector(".workers"), group.workers, value => group.workers = Math.max(1, Math.round(value)));
+      bindNumber(template.querySelector(".wage"), group.wage, value => group.wage = Math.max(0, value));
+      renderScheduleInputs(template, group);
+
+      const removeButton = template.querySelector(".removeGroup");
+      removeButton.disabled = site.groups.length === 1;
+      removeButton.addEventListener("click", () => {
+        if (site.groups.length > 1) {
+          site.groups.splice(groupIndex, 1);
+          render();
+        }
+      });
+
+      root.appendChild(node);
+    }
+
+    function renderScheduleInputs(template, group) {
+      const schedule = normalizeSchedule(group);
+      const regularRow = template.querySelector(".regularRow");
+      const overtimeRow = template.querySelector(".overtimeRow");
+
+      WEEK_DAYS.forEach(day => {
+        const regularCell = document.createElement("td");
+        const overtimeCell = document.createElement("td");
+        const regularInput = document.createElement("input");
+        const overtimeInput = document.createElement("input");
+
+        regularInput.type = "number";
+        regularInput.min = "0";
+        regularInput.max = "12";
+        regularInput.step = "0.25";
+        regularInput.value = schedule[day.key].hours;
+
+        overtimeInput.type = "number";
+        overtimeInput.min = "0";
+        overtimeInput.max = "12";
+        overtimeInput.step = "0.25";
+        overtimeInput.value = schedule[day.key].overtime;
+
+        regularInput.addEventListener("input", () => {
+          const overtime = schedule[day.key].overtime;
+          schedule[day.key].hours = clamp(number(regularInput.value, 0), 0, Math.max(0, 12 - overtime));
+          regularInput.value = schedule[day.key].hours;
+          renderSummary();
+          renderProposal();
+        });
+        regularInput.addEventListener("change", render);
+
+        overtimeInput.addEventListener("input", () => {
+          const regular = schedule[day.key].hours;
+          schedule[day.key].overtime = clamp(number(overtimeInput.value, 0), 0, Math.max(0, 12 - regular));
+          overtimeInput.value = schedule[day.key].overtime;
+          renderSummary();
+          renderProposal();
+        });
+        overtimeInput.addEventListener("change", render);
+
+        regularCell.appendChild(regularInput);
+        overtimeCell.appendChild(overtimeInput);
+        regularRow.appendChild(regularCell);
+        overtimeRow.appendChild(overtimeCell);
+      });
+    }
+
+    function bindText(input, value, update) {
+      input.value = value;
+      input.addEventListener("input", () => {
+        update(input.value);
+        renderSummary();
+        renderProposal();
+      });
+    }
+
+    function bindNumber(input, value, update) {
+      input.value = value;
+      input.addEventListener("input", () => {
+        update(number(input.value, 0));
+        renderSummary();
+        renderProposal();
+      });
+      input.addEventListener("change", render);
+    }
+
+    function bindSelect(select, value, update) {
+      select.value = value;
+      select.addEventListener("change", () => {
+        update(select.value);
+        renderSummary();
+        renderProposal();
+      });
+    }
+
+    function metric(label, value) {
+      return '<div class="metric"><span>' + label + '</span><strong>' + value + '</strong></div>';
+    }
+
+    function renderSummary() {
+      const root = document.getElementById("summary");
+      try {
+        const quote = calculateQuote();
+        let html = "";
+        html += metric("עלות שעתית", formatMoney(quote.hourlyCost));
+        html += metric("מחיר שעתי ללקוח", formatMoney(quote.finalPrice));
+        html += metric("שעות חודשיות", formatNumber(quote.monthlyHours));
+        html += metric("עלות חודשית", formatMoney(quote.monthlyCost));
+        html += metric("רווח תפעולי חודשי", formatMoney(quote.profit));
+        html += metric("מחיר חודשי", formatMoney(quote.monthlyPrice));
+        quote.sites.forEach(site => {
+          html += '<div class="site-summary"><h3>' + escapeHtml(site.name) + '</h3>';
+          html += metric("מחיר שעתי", formatMoney(site.finalPrice));
+          html += metric("שעות חודשיות", formatNumber(site.monthlyHours));
+          html += "</div>";
+        });
+        root.innerHTML = html;
+        renderProposal(quote);
+      } catch (error) {
+        root.innerHTML = '<div class="error">' + escapeHtml(error.message) + '</div>';
+        renderProposal(null, error.message);
+      }
+    }
+
+    function renderProposal(existingQuote, existingError) {
+      const root = document.getElementById("proposalPreview");
+      try {
+        if (existingError) throw new Error(existingError);
+        const quote = existingQuote || calculateQuote();
+        const clientName = document.getElementById("clientName").value.trim() || "לקוח חדש";
+        const quoteDate = document.getElementById("quoteDate").value;
+
+        let html = "";
+        html += '<div class="proposal-page">';
+        html += proposalLogoHtml();
+        html += '<div class="proposal-head">';
+        html += '<div class="proposal-date">' + escapeHtml(formatDate(quoteDate)) + '</div>';
+        html += '<div class="proposal-recipient"><div>לכבוד</div><strong>' + escapeHtml(clientName) + '</strong></div>';
+        html += '<div class="proposal-title">הצעת מחיר עבור שירותי ניקיון</div>';
+        html += '</div>';
+
+        html += '<div class="proposal-intro">';
+        proposalIntroParagraphs().forEach(text => { html += '<p>' + escapeHtml(text) + '</p>'; });
+        html += '</div>';
+        html += '<div class="proposal-signature"><div>בברכה,</div><strong>שירה מזרחי</strong><br>מנהלת פיתוח עסקי, קואופרטיב אמל</div>';
+        html += proposalFooterHtml();
+        html += '</div>';
+
+        html += '<div class="proposal-page">';
+        html += proposalLogoHtml();
+        html += '<div class="proposal-section-title">מפרט ניקיון שוטף- הצעת מחיר ראשונית</div>';
+        html += '<div class="proposal-block">';
+        html += '<table class="proposal-cost-table"><tbody>';
+        html += '<tr><th>פירוט</th><th>מרכיבי העלות</th><th>מרכיבי העלות</th></tr>';
+        html += '<tr><td>עלות לשעת ניקיון</td><td>' + costComponentLabels().map(escapeHtml).join('<br>') + '</td><td>' + costComponentValues(quote).map(value => escapeHtml(formatMoney(value))).join('<br>') + '</td></tr>';
+        html += '<tr><td colspan="2"><strong>סה&quot;כ עלות שעתית לפני מע&quot;מ</strong></td><td><strong>' + escapeHtml(formatWholeMoney(quote.breakdown.totalHourlyCost)) + '</strong></td></tr>';
+        html += '</tbody></table></div>';
+
+        html += '<div class="proposal-block"><h3>כוח אדם והיקף עבודה</h3>';
+        html += '<table><thead><tr>' + (quote.sites.length > 1 ? '<th>אתר</th>' : '') + '<th>תפקיד</th><th>עובדות</th><th>שעות</th><th>תעריף שעתי</th><th>אומדן חודשי</th></tr></thead><tbody>';
+        quote.sites.forEach(site => {
+          site.groups.forEach(group => {
+            html += '<tr>';
+            if (quote.sites.length > 1) html += '<td>' + escapeHtml(site.name) + '</td>';
+            html += '<td>' + escapeHtml(group.role) + '</td>';
+            html += '<td>' + formatNumber(group.workers) + '</td>';
+            html += '<td>' + escapeHtml(group.scheduleSummary) + '<br>' + formatNumber(group.monthlyHours) + ' שעות חודשיות</td>';
+            html += '<td>' + formatWholeMoney(group.finalPrice) + '</td>';
+            html += '<td>' + formatMoney(group.monthlyPrice) + '</td>';
+            html += '</tr>';
+          });
+        });
+        html += '</tbody></table></div>';
+
+        html += '<div class="total-line"><span>סה״כ אומדן חודשי</span><strong>' + formatMoney(quote.monthlyPrice) + '</strong></div>';
+        html += proposalFooterHtml();
+        html += '</div>';
+
+        html += '<div class="proposal-page">';
+        html += proposalLogoHtml();
+        html += '<div class="proposal-block terms"><ul class="terms-list">';
+        proposalTermsParagraphs().forEach(text => { html += '<li>' + escapeHtml(text) + '</li>'; });
+        html += '</ul></div>';
+        html += proposalFooterHtml();
+        html += '</div>';
+
+        root.innerHTML = html;
+      } catch (error) {
+        root.innerHTML = '<div class="error">' + escapeHtml(error.message) + '</div>';
+      }
+    }
+
+    function breakdownRow(label, hourly, monthly) {
+      return '<tr><td>' + label + '</td><td>' + formatMoney(hourly) + '</td><td>' + formatMoney(monthly) + '</td></tr>';
+    }
+
+    function proposalFooterHtml() {
+      return '<div class="proposal-footer">קואופרטיב ניקיון תנז׳יף - אגודה שיתופית לשירותים בע״מ &nbsp; | &nbsp; טלפון 050-5731830 &nbsp; | &nbsp; פקס 077-444-8994<br>HaNikayonCoop@gmail.com &nbsp; | &nbsp; גבעת חביבה, ד.נ מנשה, 3785000</div>';
+    }
+
+    function proposalLogoHtml() {
+      return '<img class="proposal-logo" src="image1.png" alt="לוגו קואופרטיב אמל">';
+    }
+
+    function costComponentLabels() {
+      return [
+        "שכר בסיס",
+        "עלויות מעביד וסוציאליות",
+        "נסיעות",
+        "סוציאליות על נסיעות 5%",
+        "תקורה תפעולית ורווח"
+      ];
+    }
+
+    function costComponentValues(quote) {
+      return [
+        quote.breakdown.baseHourlyCost,
+        quote.breakdown.socialHourlyCost,
+        quote.breakdown.travelHourlyCost + quote.breakdown.driverBonusHourlyCost,
+        quote.breakdown.travelSocialHourlyCost,
+        quote.breakdown.overheadProfitHourly
+      ];
+    }
+
+    function proposalIntroParagraphs() {
+      return [
+        "בהמשך לשיחתנו אנו מודות לך על האפשרות להגיש הצעה לשירותי ניקיון.",
+        "קואופרטיב הניקיון הינו מיזם פורץ דרך המתמחה באספקת שירותי ניקיון לארגונים ומוסדות.",
+        "אנחנו עסק חברתי, בבעלות עובדות הניקיון עצמן, אשר מתחייבות לספק שרותי ניקיון באיכות הגבוהה ביותר. אנו מציעות למוסדות, חברות ועסקים אפשרות חדשה של התקשרות עם גוף המספק שרותי ניקיון \"קבלניים\" אך מקדם אחריות תאגידית. אנו רואות ערך רב בהתמודדות משותפת עם חסמים חברתיים המאפשרת לנשים להשתלב בצורה מיטיבה בשוק העבודה ולהחזיר את הכוח לידיהן.",
+        "על מנת לספק את השירות הטוב ביותר, תוך העסקה הוגנת, אנו מתחייבות:",
+        "עובדות הקואופרטיב עוברות הכשרות איכותיות ויסודיות, על מנת לספק שירותי ניקיון ברמה הגבוהה ביותר, לצד פיקוח וליווי מתמשך וקרוב מצד הצוות המקצועי, כולל בניית תוכנית עבודה מפורטת וביקור חודשי באתר העבודה.",
+        "כלל העובדות בקואופרטיב הניקיון מקבלות שכר גבוה מהנהוג בענף, ואת מלוא הזכויות הסוציאליות המגיעות להן מתוקף צו ההרחבה הענפי.",
+        "כלל רווחי הקואופרטיב יחולקו לחברות הקואופרטיב (עובדות הניקיון עצמן).",
+        "שקיפות מלאה והנגשת מידע למזמין השירות לגבי תנאי ההעסקה של העובדות.",
+        "אחריות מלאה לעובדות מחליפות במידת הצורך.",
+        "נשמח להתקשר עמכן ולספק את שרותי הניקיון הטובים וההוגנים ביותר."
+      ];
+    }
+
+    function proposalTermsParagraphs() {
+      return [
+        "חשבון החיוב החודשי נעשה בהתאם לדיווח השעות שנעשה במעקב מדויק (אינו גלובלי).",
+        "מסגרת השעות שנקבעה בהצעת המחיר הינה גמישה וניתנת לשינוי לפי הצרכים בשטח. במידה שיחול שינוי מהותי בהיקף שעות העבודה בפועל (עלייה או ירידה), הקואופרטיב שומר לעצמו את הזכות לעדכן את המחיר בהתאם, בתיאום ובשקיפות מלאה מול הלקוח.",
+        "העלות השעתית מורכבת מכלל הוצאות השכר כמתחייב בצו ההרחבה של קבלני ניקיון, נסיעות, ותקורה.",
+        "אנו מספקות שירותי החלפה לעובדות במידה של היעדרות.",
+        "רכש ואספקת חומרי ניקיון תתבצע על ידי הלקוח.",
+        "הצעת המחיר צמודה לשכר המינימום ולעדכונים בצווי הרחבה רלוונטיים. במקרה של שינוי בשכר או בזכויות החלות על המעסיק, יבוצע עדכון מחיר בהתאמה.",
+        "ביום עבודה של 6 שעות ומעלה, ההפסקה תהיה בתשלום.",
+        "עבודות בימי מנוחה (שבתות וחגים מוסלמיים, בהתאם ללוח השנה המוסלמי) יחויבו בתוספת של 50%. עבודות בימי בחירות יחויבו בתוספת של 100%.",
+        "קיימים ברשותנו כלל הביטוחים הנדרשים על פי חוק.",
+        "תשלום שוטף +7 מיום הוצאת חשבונית עסקה. חשבונית מס קבלה תועבר לאחר ביצוע תשלום.",
+        "עבודה מעבר לשעות הרגילות תחויב כתוספת לפי חוק, רק אם בוצעה לבקשת הלקוח.",
+        "תחילת עבודה בכפוף לחתימה על חוזה התקשרות.",
+        "במידה והלקוח יהיה מעוניין לקלוט את העובד/ות להעסקה ישירה, הלקוח ישלם עבור השמת העובד/ות סכום חד-פעמי בערך 90% (תשעים אחוז) מממוצע 3 החשבוניות האחרונות (בתוספת מע\"מ כחוק).",
+        "הצעת מחיר זו תקפה למשך 30 ימים ממועד הוצאתה, וכפופה לשינויים במידה ויחולו עדכונים בעלויות או בתנאי ההתקשרות.",
+        "אנו פועלות בשקיפות מלאה מול הלקוחות ומספקות שירות ניקיון אמין וברמה גבוהה!"
+      ];
+    }
+
+    function formatDate(value) {
+      if (!value) return "";
+      const date = new Date(value + "T00:00:00");
+      return new Intl.DateTimeFormat("he-IL").format(date);
+    }
+
+    function exportExcel() {
+      try {
+        const quote = calculateQuote();
+        const clientName = document.getElementById("clientName").value.trim() || "לקוח חדש";
+        const quoteDate = document.getElementById("quoteDate").value;
+        const validUntil = document.getElementById("validUntil").value;
+        const margin = clamp(number(document.getElementById("margin").value, 0.15), 0.1, 0.15);
+
+        const workbook = createExcelWorkbook([
+          {
+            name: "קלטים",
+            rows: buildInputsRows(clientName, quoteDate, validUntil, margin)
+          },
+          {
+            name: "חישובים",
+            rows: buildCalculationsRows(quote)
+          },
+          {
+            name: "סיכום",
+            rows: buildSummaryRows(quote, clientName, quoteDate, validUntil)
+          }
+        ]);
+
+        const blob = new Blob([workbook], { type: "application/vnd.ms-excel;charset=utf-8" });
+        const link = document.createElement("a");
+        const safeName = clientName.replace(/[\\/:*?"<>|]/g, "-");
+        link.href = URL.createObjectURL(blob);
+        link.download = "הצעת מחיר - " + safeName + ".xls";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    function exportWord() {
+      try {
+        const quote = calculateQuote();
+        const clientName = document.getElementById("clientName").value.trim() || "לקוח חדש";
+        const quoteDate = document.getElementById("quoteDate").value;
+        const validUntil = document.getElementById("validUntil").value;
+        const docxBlob = createDocxProposal(quote, clientName, quoteDate, validUntil);
+        const link = document.createElement("a");
+        const safeName = clientName.replace(/[\\/:*?"<>|]/g, "-");
+        link.href = URL.createObjectURL(docxBlob);
+        link.download = "הצעת מחיר - " + safeName + ".docx";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    function printCleanProposal() {
+      const originalTitle = document.title;
+      document.title = " ";
+      window.print();
+      setTimeout(() => {
+        document.title = originalTitle;
+      }, 500);
+    }
+
+    function createDocxProposal(quote, clientName, quoteDate, validUntil) {
+      const documentXml = buildWordDocumentXml(quote, clientName, quoteDate, validUntil);
+      const logoBytes = window.AMAL_LOGO_BASE64 ? base64ToBytes(window.AMAL_LOGO_BASE64) : null;
+      const files = [
+        {
+          name: "[Content_Types].xml",
+          content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+            '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+            '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+            '<Default Extension="xml" ContentType="application/xml"/>' +
+            '<Default Extension="png" ContentType="image/png"/>' +
+            '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>' +
+            '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>' +
+            '<Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/>' +
+            '<Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/>' +
+            '</Types>'
+        },
+        {
+          name: "_rels/.rels",
+          content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>' +
+            '</Relationships>'
+        },
+        {
+          name: "word/_rels/document.xml.rels",
+          content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+            (logoBytes ? '<Relationship Id="rIdHeader1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/>' : '') +
+            '<Relationship Id="rIdFooter1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>' +
+            '</Relationships>'
+        },
+        {
+          name: "word/_rels/header1.xml.rels",
+          content: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+            (logoBytes ? '<Relationship Id="rIdLogo1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image1.png"/>' : '') +
+            '</Relationships>'
+        },
+        {
+          name: "word/styles.xml",
+          content: buildWordStylesXml()
+        },
+        {
+          name: "word/header1.xml",
+          content: buildWordHeaderXml()
+        },
+        {
+          name: "word/footer1.xml",
+          content: buildWordFooterXml()
+        },
+        {
+          name: "word/document.xml",
+          content: documentXml
+        }
+      ];
+      if (logoBytes) {
+        files.push({ name: "word/media/image1.png", content: logoBytes });
+      }
+
+      return new Blob([zipStore(files)], {
+        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      });
+    }
+
+    function buildWordStylesXml() {
+      return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+        '<w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Narkisim" w:hAnsi="Narkisim" w:cs="Narkisim"/><w:sz w:val="24"/><w:rtl/></w:rPr></w:rPrDefault></w:docDefaults>' +
+        '<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:pPr><w:bidi/><w:jc w:val="right"/><w:spacing w:line="324" w:lineRule="auto"/></w:pPr><w:rPr><w:rFonts w:ascii="Narkisim" w:hAnsi="Narkisim" w:cs="Narkisim"/><w:sz w:val="24"/><w:rtl/></w:rPr></w:style>' +
+        '<w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:pPr><w:bidi/><w:jc w:val="center"/><w:spacing w:line="324" w:lineRule="auto"/></w:pPr><w:rPr><w:b/><w:u w:val="single"/><w:sz w:val="24"/><w:rFonts w:ascii="Narkisim" w:hAnsi="Narkisim" w:cs="Narkisim"/><w:rtl/></w:rPr></w:style>' +
+        '</w:styles>';
+    }
+
+    function buildWordHeaderXml() {
+      return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+        (window.AMAL_LOGO_BASE64 ? wordImage("rIdLogo1", 1300000, 624000, "left") : "") +
+        '</w:hdr>';
+    }
+
+    function buildWordFooterXml() {
+      return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+        wordParagraph("קואופרטיב ניקיון תנז׳יף - אגודה שיתופית לשירותים בע״מ    מס׳ 57-005996-4", { align: "center", size: 18 }) +
+        wordParagraph("טלפון 050-5731830    פקס 077-444-8994    HaNikayonCoop@gmail.com", { align: "center", size: 18 }) +
+        wordParagraph("גבעת חביבה    ד.נ מנשה    3785000", { align: "center", size: 18 }) +
+        '</w:ftr>';
+    }
+
+    function buildWordDocumentXml(quote, clientName, quoteDate, validUntil) {
+      const parts = [];
+      parts.push(wordParagraph(formatDate(quoteDate)));
+      parts.push(wordParagraph(""));
+      parts.push(wordParagraph("לכבוד"));
+      parts.push(wordParagraph(clientName, { bold: true }));
+      parts.push(wordParagraph("הצעת מחיר עבור שירותי ניקיון", { style: "Title", align: "center" }));
+      parts.push(wordParagraph(""));
+
+      proposalIntroParagraphs().forEach(text => parts.push(wordParagraph(text, { align: "both" })));
+      parts.push(wordParagraph(""));
+      parts.push(wordParagraph("בברכה,"));
+      parts.push(wordParagraph("שירה מזרחי", { bold: true }));
+      parts.push(wordParagraph("מנהלת פיתוח עסקי, קואופרטיב אמל"));
+      parts.push(wordParagraph(""));
+      parts.push(wordPageBreak());
+
+      parts.push(wordParagraph("מפרט ניקיון שוטף- הצעת מחיר ראשונית", { bold: true, size: 28, align: "center" }));
+      parts.push(wordTable([
+        ["פירוט", "מרכיבי העלות", "מרכיבי העלות"],
+        ["עלות לשעת ניקיון", costComponentLabels().join("\n"), costComponentValues(quote).map(formatMoney).join("\n")],
+        ["סה\"כ עלות שעתית לפני מע\"מ", "", formatWholeMoney(quote.breakdown.totalHourlyCost)]
+      ], { headerFill: "D9D2E9", totalFill: "B4A7D6" }));
+
+      parts.push(wordParagraph(""));
+      parts.push(wordHeading("כוח אדם והיקף עבודה"));
+      const workforceRows = [quote.sites.length > 1 ? ["אתר", "תפקיד", "עובדות", "פירוט שעות", "תעריף שעתי", "אומדן חודשי"] : ["תפקיד", "עובדות", "פירוט שעות", "תעריף שעתי", "אומדן חודשי"]];
+      quote.sites.forEach(site => {
+        site.groups.forEach(group => {
+          const row = [
+            group.role,
+            formatNumber(group.workers),
+            group.scheduleSummary + "; סה״כ " + formatNumber(group.monthlyHours) + " שעות חודשיות",
+            formatWholeMoney(group.finalPrice),
+            formatMoney(group.monthlyPrice)
+          ];
+          if (quote.sites.length > 1) row.unshift(site.name);
+          workforceRows.push(row);
+        });
+      });
+      parts.push(wordTable(workforceRows));
+
+      parts.push(wordParagraph(""));
+      parts.push(wordParagraph("סה״כ אומדן חודשי: " + formatMoney(quote.monthlyPrice), { bold: true, size: 28 }));
+      parts.push(wordParagraph(""));
+      parts.push(wordPageBreak());
+
+      proposalTermsParagraphs().forEach(text => parts.push(wordBulletParagraph(text)));
+
+      return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+        '<w:body>' +
+        parts.join("") +
+        '<w:sectPr>' +
+        (window.AMAL_LOGO_BASE64 ? '<w:headerReference w:type="default" r:id="rIdHeader1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>' : '') +
+        '<w:footerReference w:type="default" r:id="rIdFooter1" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"/>' +
+        '<w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="360" w:footer="720"/></w:sectPr>' +
+        '</w:body></w:document>';
+    }
+
+    function wordPageBreak() {
+      return '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+    }
+
+    function wordImage(relId, cx, cy, align = "right") {
+      return '<w:p><w:pPr><w:jc w:val="' + align + '"/></w:pPr><w:r><w:drawing>' +
+        '<wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" distT="0" distB="0" distL="0" distR="0">' +
+        '<wp:extent cx="' + cx + '" cy="' + cy + '"/><wp:docPr id="1" name="Logo"/>' +
+        '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
+        '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
+        '<pic:nvPicPr><pic:cNvPr id="0" name="image1.png"/><pic:cNvPicPr/></pic:nvPicPr>' +
+        '<pic:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="' + relId + '"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>' +
+        '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + cx + '" cy="' + cy + '"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>' +
+        '</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>';
+    }
+
+    function wordHeading(text) {
+      return wordParagraph(text, { bold: true, size: 28 });
+    }
+
+    function wordParagraph(text, options = {}) {
+      const style = options.style ? '<w:pStyle w:val="' + options.style + '"/>' : "";
+      const bold = options.bold ? "<w:b/>" : "";
+      const size = options.size ? '<w:sz w:val="' + options.size + '"/>' : "";
+      const align = options.align || "right";
+      return '<w:p><w:pPr>' + style + '<w:bidi/><w:jc w:val="' + align + '"/><w:spacing w:line="324" w:lineRule="auto"/></w:pPr>' +
+        '<w:r><w:rPr><w:rFonts w:ascii="Narkisim" w:hAnsi="Narkisim" w:cs="Narkisim"/><w:rtl/>' + bold + size + '</w:rPr>' +
+        wordText(text) + '</w:r></w:p>';
+    }
+
+    function wordBulletParagraph(text) {
+      return '<w:p><w:pPr><w:bidi/><w:jc w:val="both"/><w:spacing w:line="276" w:lineRule="auto"/><w:ind w:right="360" w:hanging="180"/></w:pPr>' +
+        '<w:r><w:rPr><w:rFonts w:ascii="Narkisim" w:hAnsi="Narkisim" w:cs="Narkisim"/><w:rtl/><w:sz w:val="24"/></w:rPr>' +
+        '<w:t xml:space="preserve">• ' + xmlEscape(text) + '</w:t></w:r></w:p>';
+    }
+
+    function wordText(text) {
+      return String(text).split("\n").map((line, index) => {
+        return (index > 0 ? "<w:br/>" : "") + '<w:t xml:space="preserve">' + xmlEscape(line) + '</w:t>';
+      }).join("");
+    }
+
+    function wordTable(rows, options = {}) {
+      return '<w:tbl><w:tblPr><w:bidiVisual/><w:tblW w:w="0" w:type="auto"/>' +
+        '<w:tblBorders><w:top w:val="single" w:sz="4" w:space="0" w:color="B8C4CE"/><w:left w:val="single" w:sz="4" w:space="0" w:color="B8C4CE"/><w:bottom w:val="single" w:sz="4" w:space="0" w:color="B8C4CE"/><w:right w:val="single" w:sz="4" w:space="0" w:color="B8C4CE"/><w:insideH w:val="single" w:sz="4" w:space="0" w:color="B8C4CE"/><w:insideV w:val="single" w:sz="4" w:space="0" w:color="B8C4CE"/></w:tblBorders>' +
+        '</w:tblPr>' +
+        rows.map((row, index) => wordTableRow(row, index, options)).join("") +
+        '</w:tbl>';
+    }
+
+    function wordTableRow(row, index, options) {
+      return '<w:tr>' + row.map(cell => wordTableCell(cell, index, options)).join("") + '</w:tr>';
+    }
+
+    function wordTableCell(text, rowIndex, options) {
+      const isHeader = rowIndex === 0;
+      const isTotal = rowIndex === 2 && options.totalFill;
+      const fill = isHeader ? options.headerFill || "D9D2E9" : isTotal ? options.totalFill : "";
+      const shade = fill ? '<w:shd w:fill="' + fill + '"/>' : "";
+      const bold = isHeader || isTotal ? "<w:b/>" : "";
+      return '<w:tc><w:tcPr><w:tcW w:w="2400" w:type="dxa"/>' + shade + '</w:tcPr>' +
+        '<w:p><w:pPr><w:bidi/><w:jc w:val="right"/><w:spacing w:line="300" w:lineRule="auto"/></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Narkisim" w:hAnsi="Narkisim" w:cs="Narkisim"/><w:rtl/>' + bold + '<w:sz w:val="22"/></w:rPr>' + wordText(text) + '</w:r></w:p>' +
+        '</w:tc>';
+    }
+
+    function buildInputsRows(clientName, quoteDate, validUntil, margin) {
+      const rows = [
+        ["פרטי הצעה"],
+        ["שם לקוח", clientName],
+        ["תאריך", formatDate(quoteDate)],
+        ["בתוקף עד", formatDate(validUntil)],
+        ["אשת קשר", "שירה מזרחי"],
+        ["רווח מתוך מחיר סופי", percent(margin)],
+        [],
+        ["אתר", "ק״מ לכיוון אחד", "נסיעות למשמרת", "בונוס מסיעה יומי", "תפקיד", "עובדות", "שכר שעתי", "יום", "שעות רגילות", "שעות נוספות", "תעריף שבת"]
+      ];
+
+      sites.forEach(site => {
+        site.groups.forEach(group => {
+          const schedule = normalizeSchedule(group);
+          WEEK_DAYS.forEach(day => {
+            rows.push([
+              site.name,
+              site.km,
+              site.trips,
+              site.driverBonus || 0,
+              group.role,
+              group.workers,
+              group.wage,
+              day.label,
+              schedule[day.key].hours,
+              schedule[day.key].overtime,
+              day.isShabbat && (schedule[day.key].hours + schedule[day.key].overtime > 0) ? "כן" : "לא"
+            ]);
+          });
+        });
+      });
+
+      return rows;
+    }
+
+    function buildCalculationsRows(quote) {
+      const rows = [
+        ["חישוב מפורט לפי אתר וקבוצת עבודה"],
+        [
+          "אתר",
+          "תפקיד",
+          "עובדות",
+          "ימי עבודה בשבוע",
+          "שעות רגילות בשבוע",
+          "שעות נוספות בשבוע",
+          "שכר שעתי",
+          "שבת",
+          "שעות חודשיות",
+          "בסיס חודשי",
+          "עלויות מעביד וסוציאליות",
+          "נסיעות",
+          "בונוס מסיעה",
+          "סוציאליות על נסיעות ובונוס מסיעה 5%",
+          "עלות חודשית",
+          "תקורה ורווח",
+          "מחיר חודשי",
+          "עלות שעתית",
+          "מחיר שעתי ללקוח"
+        ]
+      ];
+
+      quote.sites.forEach(site => {
+        site.groups.forEach(group => {
+          rows.push([
+            site.name,
+            group.role,
+            group.workers,
+            group.daysPerWeek,
+            roundForExcel(group.weeklyRegularHours),
+            roundForExcel(group.weeklyOvertimeHours),
+            group.hourlyWage,
+            group.hasShabbatHours ? "כן" : "לא",
+            roundForExcel(group.monthlyHours),
+            roundForExcel(group.breakdown.baseMonthlyCost),
+            roundForExcel(group.breakdown.socialMonthlyCost),
+            roundForExcel(group.breakdown.travelMonthlyCost),
+            roundForExcel(group.breakdown.driverBonusMonthlyCost),
+            roundForExcel(group.breakdown.travelSocialMonthlyCost),
+            roundForExcel(group.monthlyCost),
+            roundForExcel(group.breakdown.overheadProfitMonthly),
+            roundForExcel(group.monthlyPrice),
+            roundForExcel(group.hourlyCost),
+            roundForExcel(group.finalPrice)
+          ]);
+        });
+
+        rows.push([
+          "סה״כ " + site.name,
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          roundForExcel(site.monthlyHours),
+          roundForExcel(site.breakdown.baseMonthlyCost),
+          roundForExcel(site.breakdown.socialMonthlyCost),
+          roundForExcel(site.breakdown.travelMonthlyCost),
+          roundForExcel(site.breakdown.driverBonusMonthlyCost),
+          roundForExcel(site.breakdown.travelSocialMonthlyCost),
+          roundForExcel(site.monthlyCost),
+          roundForExcel(site.breakdown.overheadProfitMonthly),
+          roundForExcel(site.monthlyPrice),
+          roundForExcel(site.hourlyCost),
+          roundForExcel(site.finalPrice)
+        ]);
+        rows.push([]);
+      });
+
+      return rows;
+    }
+
+    function buildSummaryRows(quote, clientName, quoteDate, validUntil) {
+      const rows = [
+        ["הצעת מחיר לשירותי ניקיון"],
+        ["שם לקוח", clientName],
+        ["תאריך", formatDate(quoteDate)],
+        ["בתוקף עד", formatDate(validUntil)],
+        ["אשת קשר", "שירה מזרחי"],
+        [],
+        ["פירוט עלות שעתית"],
+        ["רכיב", "עלות שעתית", "אומדן חודשי"],
+        ["בסיס", roundForExcel(quote.breakdown.baseHourlyCost), roundForExcel(quote.breakdown.baseMonthlyCost)],
+        ["עלויות מעביד וסוציאליות", roundForExcel(quote.breakdown.socialHourlyCost), roundForExcel(quote.breakdown.socialMonthlyCost)],
+        ["נסיעות", roundForExcel(quote.breakdown.travelHourlyCost + quote.breakdown.driverBonusHourlyCost), roundForExcel(quote.breakdown.travelMonthlyCost + quote.breakdown.driverBonusMonthlyCost)],
+        ["סוציאליות על נסיעות 5%", roundForExcel(quote.breakdown.travelSocialHourlyCost), roundForExcel(quote.breakdown.travelSocialMonthlyCost)],
+        ["תקורה ורווח", roundForExcel(quote.breakdown.overheadProfitHourly), roundForExcel(quote.breakdown.overheadProfitMonthly)],
+        ["עלות שעתית כוללת ללקוח", roundForExcel(quote.breakdown.totalHourlyCost), roundForExcel(quote.monthlyPrice)],
+        [],
+        ["כוח אדם והיקף עבודה"],
+        ["אתר", "תפקיד", "עובדות", "פירוט שעות", "תעריף שעתי", "אומדן חודשי"]
+      ];
+
+      quote.sites.forEach(site => {
+        site.groups.forEach(group => {
+          rows.push([
+            site.name,
+            group.role,
+            group.workers,
+            group.scheduleSummary + "; סה״כ " + roundForExcel(group.monthlyHours) + " שעות חודשיות",
+            roundForExcel(group.finalPrice),
+            roundForExcel(group.monthlyPrice)
+          ]);
+        });
+      });
+
+      rows.push([]);
+      rows.push(["סה״כ אומדן חודשי", roundForExcel(quote.monthlyPrice)]);
+      rows.push(["סה״כ שעות חודשיות", roundForExcel(quote.monthlyHours)]);
+      rows.push(["מחיר שעתי ממוצע", roundForExcel(quote.finalPrice)]);
+      rows.push([]);
+      rows.push(["טקסט פתיחה"]);
+      rows.push(["בהמשך לשיחתנו, מצורפת הצעת מחיר למתן שירותי ניקיון על ידי קואופרטיב אמל. אמל הוא עסק חברתי בבעלות עובדות הניקיון עצמן, הפועל כאלטרנטיבה הוגנת ומקצועית לשירותי ניקיון במודל קבלני."]);
+      rows.push([]);
+      rows.push(["תנאים והבהרות"]);
+      rows.push(["ההצעה מבוססת על היקף העבודה והנתונים המפורטים לעיל. שינוי בכמות העובדות, שעות העבודה, ימי העבודה, מרחקי הנסיעה או דרישות השירות עשוי להשפיע על המחיר. התעריפים אינם כוללים מע״מ, אלא אם צוין אחרת. ההצעה תקפה ל־30 יום ממועד הפקתה."]);
+      rows.push([]);
+      rows.push(["פרטי קשר"]);
+      rows.push(["שירה מזרחי"]);
+      rows.push(["מנהלת פיתוח עסקי, קואופרטיב אמל"]);
+
+      return rows;
+    }
+
+    function createExcelWorkbook(sheets) {
+      const worksheets = sheets.map(sheet => (
+        '<Worksheet ss:Name="' + xmlEscape(sheet.name) + '">' +
+        '<Table>' +
+        sheet.rows.map(rowToXml).join("") +
+        '</Table></Worksheet>'
+      )).join("");
+
+      return '<?xml version="1.0" encoding="UTF-8"?>' +
+        '<?mso-application progid="Excel.Sheet"?>' +
+        '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ' +
+        'xmlns:o="urn:schemas-microsoft-com:office:office" ' +
+        'xmlns:x="urn:schemas-microsoft-com:office:excel" ' +
+        'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" ' +
+        'xmlns:html="http://www.w3.org/TR/REC-html40">' +
+        '<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">' +
+        '<Author>קואופרטיב אמל</Author>' +
+        '</DocumentProperties>' +
+        '<Styles>' +
+        '<Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center" ss:ReadingOrder="RightToLeft"/><Font ss:FontName="Arial" ss:Size="11"/></Style>' +
+        '<Style ss:ID="Header"><Font ss:FontName="Arial" ss:Size="11" ss:Bold="1"/><Interior ss:Color="#EEF3F4" ss:Pattern="Solid"/></Style>' +
+        '</Styles>' +
+        worksheets +
+        '</Workbook>';
+    }
+
+    function zipStore(files) {
+      const encoder = new TextEncoder();
+      const localParts = [];
+      const centralParts = [];
+      let offset = 0;
+
+      files.forEach(file => {
+        const nameBytes = encoder.encode(file.name);
+        const dataBytes = file.content instanceof Uint8Array ? file.content : encoder.encode(file.content);
+        const crc = crc32(dataBytes);
+
+        const localHeader = new Uint8Array(30 + nameBytes.length);
+        const localView = new DataView(localHeader.buffer);
+        localView.setUint32(0, 0x04034b50, true);
+        localView.setUint16(4, 20, true);
+        localView.setUint16(6, 0, true);
+        localView.setUint16(8, 0, true);
+        localView.setUint16(10, 0, true);
+        localView.setUint16(12, 0, true);
+        localView.setUint32(14, crc, true);
+        localView.setUint32(18, dataBytes.length, true);
+        localView.setUint32(22, dataBytes.length, true);
+        localView.setUint16(26, nameBytes.length, true);
+        localView.setUint16(28, 0, true);
+        localHeader.set(nameBytes, 30);
+
+        localParts.push(localHeader, dataBytes);
+
+        const centralHeader = new Uint8Array(46 + nameBytes.length);
+        const centralView = new DataView(centralHeader.buffer);
+        centralView.setUint32(0, 0x02014b50, true);
+        centralView.setUint16(4, 20, true);
+        centralView.setUint16(6, 20, true);
+        centralView.setUint16(8, 0, true);
+        centralView.setUint16(10, 0, true);
+        centralView.setUint16(12, 0, true);
+        centralView.setUint16(14, 0, true);
+        centralView.setUint32(16, crc, true);
+        centralView.setUint32(20, dataBytes.length, true);
+        centralView.setUint32(24, dataBytes.length, true);
+        centralView.setUint16(28, nameBytes.length, true);
+        centralView.setUint16(30, 0, true);
+        centralView.setUint16(32, 0, true);
+        centralView.setUint16(34, 0, true);
+        centralView.setUint16(36, 0, true);
+        centralView.setUint32(38, 0, true);
+        centralView.setUint32(42, offset, true);
+        centralHeader.set(nameBytes, 46);
+
+        centralParts.push(centralHeader);
+        offset += localHeader.length + dataBytes.length;
+      });
+
+      const centralSize = centralParts.reduce((sum, part) => sum + part.length, 0);
+      const end = new Uint8Array(22);
+      const endView = new DataView(end.buffer);
+      endView.setUint32(0, 0x06054b50, true);
+      endView.setUint16(4, 0, true);
+      endView.setUint16(6, 0, true);
+      endView.setUint16(8, files.length, true);
+      endView.setUint16(10, files.length, true);
+      endView.setUint32(12, centralSize, true);
+      endView.setUint32(16, offset, true);
+      endView.setUint16(20, 0, true);
+
+      return new Blob([...localParts, ...centralParts, end]);
+    }
+
+    function base64ToBytes(base64) {
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let index = 0; index < binary.length; index++) {
+        bytes[index] = binary.charCodeAt(index);
+      }
+      return bytes;
+    }
+
+    function crc32(bytes) {
+      let crc = -1;
+      for (let index = 0; index < bytes.length; index++) {
+        crc = (crc >>> 8) ^ CRC_TABLE[(crc ^ bytes[index]) & 0xff];
+      }
+      return (crc ^ -1) >>> 0;
+    }
+
+    const CRC_TABLE = (() => {
+      const table = new Uint32Array(256);
+      for (let index = 0; index < 256; index++) {
+        let value = index;
+        for (let bit = 0; bit < 8; bit++) {
+          value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1;
+        }
+        table[index] = value >>> 0;
+      }
+      return table;
+    })();
+
+    function rowToXml(row, rowIndex) {
+      if (!row || row.length === 0) return '<Row/>';
+      const style = rowIndex <= 1 ? ' ss:StyleID="Header"' : '';
+      return '<Row>' + row.map(cell => cellToXml(cell, style)).join("") + '</Row>';
+    }
+
+    function cellToXml(value, style) {
+      const isNumber = typeof value === "number" && Number.isFinite(value);
+      const type = isNumber ? "Number" : "String";
+      return '<Cell' + style + '><Data ss:Type="' + type + '">' + xmlEscape(value == null ? "" : value) + '</Data></Cell>';
+    }
+
+    function roundForExcel(value) {
+      return Math.round((value + Number.EPSILON) * 100) / 100;
+    }
+
+    function percent(value) {
+      const rounded = Math.round((value || 0) * 1000) / 10;
+      return new Intl.NumberFormat("he-IL", {
+        maximumFractionDigits: 1
+      }).format(rounded) + "%";
+    }
+
+    function formatMarginValue(value) {
+      return value.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+    }
+
+    function xmlEscape(value) {
+      return String(value).replace(/[<>&"']/g, char => ({
+        "<": "&lt;",
+        ">": "&gt;",
+        "&": "&amp;",
+        '"': "&quot;",
+        "'": "&apos;"
+      }[char]));
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function init() {
+      const today = new Date();
+      document.getElementById("quoteDate").value = localDateValue(today);
+      document.getElementById("validUntil").value = localDateValue(addDays(today, 30));
+      document.getElementById("quoteDate").addEventListener("change", () => {
+        renderSummary();
+        renderProposal();
+      });
+      document.getElementById("validUntil").addEventListener("change", () => {
+        renderSummary();
+        renderProposal();
+      });
+      document.getElementById("margin").addEventListener("input", renderSummary);
+      document.getElementById("margin").addEventListener("change", () => {
+        const margin = document.getElementById("margin");
+        margin.value = formatMarginValue(clamp(number(margin.value, 0.15), 0.1, 0.15));
+        renderSummary();
+        renderProposal();
+      });
+      document.getElementById("clientName").addEventListener("input", renderSummary);
+      document.getElementById("clientName").addEventListener("input", renderProposal);
+      document.getElementById("printProposal").addEventListener("click", printCleanProposal);
+      document.getElementById("exportExcel").addEventListener("click", exportExcel);
+      document.getElementById("exportWord").addEventListener("click", exportWord);
+      document.getElementById("addSite").addEventListener("click", () => {
+        sites.push(newSite());
+        render();
+      });
+      sites.push(newSite());
+      render();
+    }
+
+    init();
+  </script>
+</body>
 </html>
