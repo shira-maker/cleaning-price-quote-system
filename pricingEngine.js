@@ -3,6 +3,7 @@
 
 const WEEKS_PER_MONTH = 4.3;
 const KM_COST_PER_KM = 1;
+const TRAVEL_SOCIAL_RATE = 0.05;
 const MIN_MARGIN = 0.1;
 const MAX_MARGIN = 0.15;
 const MAX_DAILY_HOURS = 12;
@@ -34,7 +35,8 @@ const MAX_DAILY_HOURS = 12;
  * @property {string} name
  * @property {string} [address]
  * @property {number} km_one_direction
- * @property {1|2} trips_per_shift
+ * @property {number} trips_per_shift
+ * @property {number} [driver_bonus_per_shift]
  * @property {ContactPerson[]} contact_people
  * @property {WorkGroup[]} work_groups
  */
@@ -131,9 +133,9 @@ function validateSite(site, path) {
   requiredString(site.id, `${path}.id`);
   requiredString(site.name, `${path}.name`);
   requiredNumber(site.km_one_direction, `${path}.km_one_direction`, { min: 0 });
-
-  if (![1, 2].includes(site.trips_per_shift)) {
-    throw new Error(`${path}.trips_per_shift must be 1 or 2`);
+  requiredNumber(site.trips_per_shift, `${path}.trips_per_shift`, { min: 0 });
+  if (site.driver_bonus_per_shift !== undefined) {
+    requiredNumber(site.driver_bonus_per_shift, `${path}.driver_bonus_per_shift`, { min: 0 });
   }
 
   requiredArray(site.contact_people, `${path}.contact_people`);
@@ -162,11 +164,15 @@ function validateMargin(margin) {
 function calculateTravel(site, hoursPerDay) {
   const totalKmPerShift = site.km_one_direction * 2 * site.trips_per_shift;
   const dailyTravelCost = totalKmPerShift * KM_COST_PER_KM;
-  const travelPerRegularHour = dailyTravelCost / hoursPerDay;
+  const dailyDriverBonus = site.driver_bonus_per_shift || 0;
+  const dailyTravelAndDriverBonusCost = dailyTravelCost + dailyDriverBonus;
+  const travelPerRegularHour = dailyTravelAndDriverBonusCost / hoursPerDay;
 
   return {
     total_km_per_shift: totalKmPerShift,
     daily_travel_cost: dailyTravelCost,
+    daily_driver_bonus: dailyDriverBonus,
+    daily_travel_and_driver_bonus_cost: dailyTravelAndDriverBonusCost,
     travel_per_regular_hour: travelPerRegularHour,
   };
 }
@@ -248,6 +254,7 @@ function pickSiteFields(site) {
     address: site.address || null,
     km_one_direction: site.km_one_direction,
     trips_per_shift: site.trips_per_shift,
+    driver_bonus_per_shift: site.driver_bonus_per_shift || 0,
     contact_people: site.contact_people.map(pickContactFields),
   };
 }
@@ -280,8 +287,10 @@ function calculateWorkGroup(group, site, margin) {
     overtime.first_125_hours_per_day * overtime.hourly_rate_125 +
     overtime.beyond_150_hours_per_day * overtime.hourly_rate_150;
   const monthlyOvertimeCost = group.workers * monthlyWorkDays * dailyOvertimeCost;
-  const monthlyTravelCost = group.workers * monthlyWorkDays * travel.daily_travel_cost;
-  const monthlyCost = monthlyRegularSalaryCost + monthlyOvertimeCost + monthlyTravelCost;
+  const monthlyTravelCost = monthlyWorkDays * travel.daily_travel_cost;
+  const monthlyDriverBonusCost = monthlyWorkDays * travel.daily_driver_bonus;
+  const monthlyTravelSocialCost = (monthlyTravelCost + monthlyDriverBonusCost) * TRAVEL_SOCIAL_RATE;
+  const monthlyCost = monthlyRegularSalaryCost + monthlyOvertimeCost + monthlyTravelCost + monthlyDriverBonusCost + monthlyTravelSocialCost;
   const hourlyCost = monthlyCost / monthlyBillableHours;
   const priced = calculateMargin(hourlyCost, margin);
   const monthlyPrice = priced.price * monthlyBillableHours;
@@ -324,8 +333,12 @@ function calculateWorkGroup(group, site, margin) {
         km_cost_per_km: KM_COST_PER_KM,
         total_km_per_shift: roundHours(travel.total_km_per_shift),
         daily_travel_cost: roundMoney(travel.daily_travel_cost),
+        daily_driver_bonus: roundMoney(travel.daily_driver_bonus),
         travel_per_regular_hour: roundMoney(travel.travel_per_regular_hour),
         monthly_travel_cost: roundMoney(monthlyTravelCost),
+        monthly_driver_bonus_cost: roundMoney(monthlyDriverBonusCost),
+        travel_social_rate: TRAVEL_SOCIAL_RATE,
+        monthly_travel_social_cost: roundMoney(monthlyTravelSocialCost),
       },
       margin: {
         margin,

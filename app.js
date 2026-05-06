@@ -18,9 +18,9 @@ function makeId(prefix) {
 function newWorkGroup() {
   return {
     id: makeId("group"),
-    name: "צוות ניקיון",
+    name: "עובדת ניקיון",
     workers: 1,
-    hourly_wage: 35,
+    hourly_wage: 39.11,
     days_per_week: 5,
     hours_per_day: 6,
     overtime_hours_per_day: 0,
@@ -32,8 +32,9 @@ function newSite() {
   return {
     id: makeId("site"),
     name: "אתר חדש",
-    km_one_direction: 0,
+    km_one_direction: 8,
     trips_per_shift: 1,
+    driver_bonus_per_shift: 0,
     contact_people: [],
     work_groups: [newWorkGroup()],
   };
@@ -45,7 +46,7 @@ function initialForm() {
     quoteDate: TODAY,
     validUntil: VALID_UNTIL,
     contactId: CONTACTS[0].id,
-    margin: 0.12,
+    margin: 0.15,
     sites: [newSite()],
   };
 }
@@ -168,8 +169,16 @@ function App() {
             onChange: (value) => updateForm("clientName", value),
             placeholder: "לדוגמה: בית החולים הסקוטי",
           }),
-          h(Field, { label: "תאריך", value: form.quoteDate, readOnly: true }),
-          h(Field, { label: "בתוקף עד", value: form.validUntil, readOnly: true }),
+          h(DateField, {
+            label: "תאריך",
+            value: form.quoteDate,
+            onChange: (value) => updateForm("quoteDate", value),
+          }),
+          h(DateField, {
+            label: "בתוקף עד",
+            value: form.validUntil,
+            onChange: (value) => updateForm("validUntil", value),
+          }),
           h(SelectField, {
             label: "אשת קשר",
             value: form.contactId,
@@ -181,7 +190,7 @@ function App() {
             value: form.margin,
             min: 0.1,
             max: 0.15,
-            step: 0.01,
+            step: 0.005,
             onChange: (value) => updateForm("margin", clamp(value, 0.1, 0.15)),
           }),
         ]),
@@ -233,14 +242,19 @@ function SiteForm(props) {
         step: 1,
         onChange: (value) => onChange(site.id, "km_one_direction", Math.max(0, value)),
       }),
-      h(SelectField, {
+      h(NumberField, {
         label: "נסיעות למשמרת",
-        value: String(site.trips_per_shift),
-        onChange: (value) => onChange(site.id, "trips_per_shift", Number(value)),
-        options: [
-          { value: "1", label: "1" },
-          { value: "2", label: "2" },
-        ],
+        value: site.trips_per_shift,
+        min: 0,
+        step: 0.5,
+        onChange: (value) => onChange(site.id, "trips_per_shift", Math.max(0, value)),
+      }),
+      h(NumberField, {
+        label: "בונוס מסיעה יומי",
+        value: site.driver_bonus_per_shift || 0,
+        min: 0,
+        step: 0.5,
+        onChange: (value) => onChange(site.id, "driver_bonus_per_shift", Math.max(0, value)),
       }),
     ]),
     h("div", { className: "work-groups" }, [
@@ -350,12 +364,12 @@ function Summary({ quote }) {
       quote.error ? h("div", { className: "error" }, quote.error) : null,
       result
         ? [
-            h(Metric, { label: "מחיר שעתי ללקוח", value: money(result.final_price) }),
             h(Metric, { label: "עלות שעתית", value: money(result.hourly_cost) }),
+            h(Metric, { label: "מחיר שעתי ללקוח", value: money(result.final_price) }),
             h(Metric, { label: "שעות חודשיות", value: hours(result.monthly_hours) }),
             h(Metric, { label: "עלות חודשית", value: money(result.monthly_cost) }),
+            h(Metric, { label: "רווח תפעולי חודשי", value: money(result.profit) }),
             h(Metric, { label: "מחיר חודשי", value: money(result.monthly_price) }),
-            h(Metric, { label: "רווח חודשי", value: money(result.profit) }),
             result.sites.map((site) =>
               h("div", { className: "site-summary", key: site.site.id }, [
                 h("h3", null, site.site.name),
@@ -382,6 +396,17 @@ function Field({ label, value, onChange, placeholder, readOnly }) {
       placeholder,
       readOnly: Boolean(readOnly),
       onChange: (event) => onChange && onChange(event.target.value),
+    }),
+  ]);
+}
+
+function DateField({ label, value, onChange }) {
+  return h("label", { className: "field" }, [
+    h("span", null, label),
+    h("input", {
+      type: "date",
+      value,
+      onChange: (event) => onChange(event.target.value),
     }),
   ]);
 }
