@@ -1,3 +1,6 @@
+(function () {
+  "use strict";
+
 const WEEKS_PER_MONTH = 4.3;
 const KM_COST_PER_KM = 1;
 const MIN_MARGIN = 0.1;
@@ -538,10 +541,7 @@ const PricingEngine = {
   validateWorkGroup,
 };
 
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = PricingEngine;
-}
-
 if (typeof window !== "undefined") {
   window.PricingEngine = PricingEngine;
 }
+})();

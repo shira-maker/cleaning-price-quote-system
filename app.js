@@ -1,6 +1,5 @@
 const { useMemo, useState } = React;
 const { createRoot } = ReactDOM;
-const { calculateQuote } = window.PricingEngine;
 
 const CONTACTS = [{ id: "shira-mizrahi", name: "שירה מזרחי" }];
 const TODAY = new Date().toISOString().slice(0, 10);
@@ -91,7 +90,7 @@ function App() {
     };
 
     try {
-      return { result: calculateQuote(input), error: null };
+      return { result: window.PricingEngine.calculateQuote(input), error: null };
     } catch (error) {
       return { result: null, error: error.message };
     }
