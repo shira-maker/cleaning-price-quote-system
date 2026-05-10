@@ -989,15 +989,17 @@
 
         html += '<div class="proposal-block"><h3>כוח אדם והיקף עבודה</h3>';
         html += '<table><thead><tr>' + (quote.sites.length > 1 ? '<th>אתר</th>' : '') + '<th>תפקיד</th><th>עובדות</th><th>שעות</th><th>תעריף שעתי</th><th>אומדן חודשי</th></tr></thead><tbody>';
+        const uniformProposalRate = quote.finalPrice;
         quote.sites.forEach(site => {
           site.groups.forEach(group => {
+            const uniformGroupMonthlyPrice = uniformProposalRate * group.monthlyHours;
             html += '<tr>';
             if (quote.sites.length > 1) html += '<td>' + escapeHtml(site.name) + '</td>';
             html += '<td>' + escapeHtml(group.role) + '</td>';
             html += '<td>' + formatNumber(group.workers) + '</td>';
             html += '<td>' + escapeHtml(group.scheduleSummary) + '<br>' + formatNumber(group.monthlyHours) + ' שעות חודשיות</td>';
-            html += '<td>' + formatWholeMoney(group.finalPrice) + '</td>';
-            html += '<td>' + formatMoney(group.monthlyPrice) + '</td>';
+            html += '<td>' + formatWholeMoney(uniformProposalRate) + '</td>';
+            html += '<td>' + formatMoney(uniformGroupMonthlyPrice) + '</td>';
             html += '</tr>';
           });
         });
@@ -1277,14 +1279,16 @@
       parts.push(wordParagraph(""));
       parts.push(wordHeading("כוח אדם והיקף עבודה"));
       const workforceRows = [quote.sites.length > 1 ? ["אתר", "תפקיד", "עובדות", "פירוט שעות", "תעריף שעתי", "אומדן חודשי"] : ["תפקיד", "עובדות", "פירוט שעות", "תעריף שעתי", "אומדן חודשי"]];
+      const uniformProposalRate = quote.finalPrice;
       quote.sites.forEach(site => {
         site.groups.forEach(group => {
+          const uniformGroupMonthlyPrice = uniformProposalRate * group.monthlyHours;
           const row = [
             group.role,
             formatNumber(group.workers),
             group.scheduleSummary + "; סה״כ " + formatNumber(group.monthlyHours) + " שעות חודשיות",
-            formatWholeMoney(group.finalPrice),
-            formatMoney(group.monthlyPrice)
+            formatWholeMoney(uniformProposalRate),
+            formatMoney(uniformGroupMonthlyPrice)
           ];
           if (quote.sites.length > 1) row.unshift(site.name);
           workforceRows.push(row);
@@ -1512,13 +1516,14 @@
 
       quote.sites.forEach(site => {
         site.groups.forEach(group => {
+          const uniformGroupMonthlyPrice = quote.finalPrice * group.monthlyHours;
           rows.push([
             site.name,
             group.role,
             group.workers,
             group.scheduleSummary + "; סה״כ " + roundForExcel(group.monthlyHours) + " שעות חודשיות",
-            roundForExcel(group.finalPrice),
-            roundForExcel(group.monthlyPrice)
+            roundForExcel(quote.finalPrice),
+            roundForExcel(uniformGroupMonthlyPrice)
           ]);
         });
       });
