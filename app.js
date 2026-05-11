@@ -202,10 +202,10 @@ function App() {
           h(NumberField, {
             label: "רווח",
             value: form.margin,
-            min: 0.1,
-            max: 0.15,
+            min: 0,
+            max: 0.95,
             step: 0.005,
-            onChange: (value) => updateForm("margin", clamp(value, 0.1, 0.15)),
+            onChange: (value) => updateForm("margin", clamp(value, 0, 0.95)),
           }),
         ]),
         h("div", { className: "row-actions", style: { marginTop: 22 } }, [

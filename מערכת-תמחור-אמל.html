@@ -410,7 +410,7 @@
         <label>תאריך<input id="quoteDate" type="date"></label>
         <label>בתוקף עד<input id="validUntil" type="date"></label>
         <label>אשת קשר<select id="contact"><option>שירה מזרחי</option></select></label>
-        <label>רווח מתוך מחיר סופי<input id="margin" type="number" min="0.10" max="0.15" step="0.005" value="0.15"></label>
+        <label>רווח מתוך מחיר סופי<input id="margin" type="number" min="0" max="0.95" step="0.005" value="0.15"></label>
       </div>
 
       <div class="row" style="margin-top: 22px;">
@@ -590,7 +590,7 @@
     }
 
     function calculateGroup(group, site, margin) {
-      if (margin < 0.1 || margin > 0.15) throw new Error("הרווח חייב להיות בין 10% ל־15%");
+      if (margin < 0 || margin >= 1) throw new Error("הרווח חייב להיות בין 0% לפחות מ־100%");
 
       const hourlyBase = group.wage * 1.5;
       const normalizedSchedule = normalizeSchedule(group);
@@ -685,7 +685,7 @@
     }
 
     function calculateQuote() {
-      const margin = clamp(number(document.getElementById("margin").value, 0.15), 0.1, 0.15);
+      const margin = clamp(number(document.getElementById("margin").value, 0.15), 0, 0.95);
       const calculatedSites = sites.map(site => {
         const groups = site.groups.map(group => calculateGroup(group, site, margin));
         const monthlyHours = groups.reduce((sum, group) => sum + group.monthlyHours, 0);
@@ -1102,7 +1102,7 @@
         const clientName = document.getElementById("clientName").value.trim() || "לקוח חדש";
         const quoteDate = document.getElementById("quoteDate").value;
         const validUntil = document.getElementById("validUntil").value;
-        const margin = clamp(number(document.getElementById("margin").value, 0.15), 0.1, 0.15);
+        const margin = clamp(number(document.getElementById("margin").value, 0.15), 0, 0.95);
 
         const workbook = createExcelWorkbook([
           {
@@ -1731,7 +1731,7 @@
       document.getElementById("margin").addEventListener("input", renderSummary);
       document.getElementById("margin").addEventListener("change", () => {
         const margin = document.getElementById("margin");
-        margin.value = formatMarginValue(clamp(number(margin.value, 0.15), 0.1, 0.15));
+        margin.value = formatMarginValue(clamp(number(margin.value, 0.15), 0, 0.95));
         renderSummary();
         renderProposal();
       });
