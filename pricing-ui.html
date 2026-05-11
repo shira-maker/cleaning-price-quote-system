@@ -1005,7 +1005,7 @@
         });
         html += '</tbody></table></div>';
 
-        html += '<div class="total-line"><span>סה״כ אומדן חודשי</span><strong>' + formatMoney(quote.monthlyPrice) + '</strong></div>';
+        html += '<div class="total-line"><span>סה״כ אומדן חודשי לפני מע״מ</span><strong>' + formatMoney(quote.monthlyPrice) + '</strong></div>';
         html += proposalFooterHtml();
         html += '</div>';
 
@@ -1297,7 +1297,7 @@
       parts.push(wordTable(workforceRows));
 
       parts.push(wordParagraph(""));
-      parts.push(wordParagraph("סה״כ אומדן חודשי: " + formatMoney(quote.monthlyPrice), { bold: true, size: 28 }));
+      parts.push(wordParagraph("סה״כ אומדן חודשי לפני מע״מ: " + formatMoney(quote.monthlyPrice), { bold: true, size: 28 }));
       parts.push(wordParagraph(""));
       parts.push(wordPageBreak());
 
@@ -1529,7 +1529,7 @@
       });
 
       rows.push([]);
-      rows.push(["סה״כ אומדן חודשי", roundForExcel(quote.monthlyPrice)]);
+      rows.push(["סה״כ אומדן חודשי לפני מע״מ", roundForExcel(quote.monthlyPrice)]);
       rows.push(["סה״כ שעות חודשיות", roundForExcel(quote.monthlyHours)]);
       rows.push(["מחיר שעתי ממוצע", roundForExcel(quote.finalPrice)]);
       rows.push([]);
