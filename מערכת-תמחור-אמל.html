@@ -410,7 +410,7 @@
         <label>תאריך<input id="quoteDate" type="date"></label>
         <label>בתוקף עד<input id="validUntil" type="date"></label>
         <label>אשת קשר<select id="contact"><option>שירה מזרחי</option></select></label>
-        <label>רווח מתוך מחיר סופי<input id="margin" type="number" min="0" max="0.95" step="0.005" value="0.15"></label>
+        <label>רווח מתוך מחיר סופי (%)<input id="margin" type="number" min="0" max="99" step="0.1" value="15"></label>
       </div>
 
       <div class="row" style="margin-top: 22px;">
@@ -685,7 +685,7 @@
     }
 
     function calculateQuote() {
-      const margin = clamp(number(document.getElementById("margin").value, 0.15), 0, 0.95);
+      const margin = readMargin();
       const calculatedSites = sites.map(site => {
         const groups = site.groups.map(group => calculateGroup(group, site, margin));
         const monthlyHours = groups.reduce((sum, group) => sum + group.monthlyHours, 0);
@@ -1102,7 +1102,7 @@
         const clientName = document.getElementById("clientName").value.trim() || "לקוח חדש";
         const quoteDate = document.getElementById("quoteDate").value;
         const validUntil = document.getElementById("validUntil").value;
-        const margin = clamp(number(document.getElementById("margin").value, 0.15), 0, 0.95);
+        const margin = readMargin();
 
         const workbook = createExcelWorkbook([
           {
@@ -1692,8 +1692,12 @@
       }).format(rounded) + "%";
     }
 
-    function formatMarginValue(value) {
-      return value.toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+    function readMargin() {
+      return clamp(number(document.getElementById("margin").value, 15), 0, 99) / 100;
+    }
+
+    function formatMarginInputValue(value) {
+      return value.toFixed(1).replace(/\.0$/, "");
     }
 
     function xmlEscape(value) {
@@ -1731,7 +1735,7 @@
       document.getElementById("margin").addEventListener("input", renderSummary);
       document.getElementById("margin").addEventListener("change", () => {
         const margin = document.getElementById("margin");
-        margin.value = formatMarginValue(clamp(number(margin.value, 0.15), 0, 0.95));
+        margin.value = formatMarginInputValue(clamp(number(margin.value, 15), 0, 99));
         renderSummary();
         renderProposal();
       });

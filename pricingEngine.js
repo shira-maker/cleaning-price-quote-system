@@ -5,7 +5,7 @@ const WEEKS_PER_MONTH = 4.3;
 const KM_COST_PER_KM = 1;
 const TRAVEL_SOCIAL_RATE = 0.05;
 const MIN_MARGIN = 0;
-const MAX_MARGIN = 0.95;
+const MAX_MARGIN = 0.99;
 const MAX_DAILY_HOURS = 12;
 
 /**

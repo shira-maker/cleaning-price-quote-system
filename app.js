@@ -200,12 +200,12 @@ function App() {
             options: CONTACTS.map((contact) => ({ value: contact.id, label: contact.name })),
           }),
           h(NumberField, {
-            label: "רווח",
-            value: form.margin,
+            label: "רווח (%)",
+            value: form.margin * 100,
             min: 0,
-            max: 0.95,
-            step: 0.005,
-            onChange: (value) => updateForm("margin", clamp(value, 0, 0.95)),
+            max: 99,
+            step: 0.1,
+            onChange: (value) => updateForm("margin", clamp(value, 0, 99) / 100),
           }),
         ]),
         h("div", { className: "row-actions", style: { marginTop: 22 } }, [
