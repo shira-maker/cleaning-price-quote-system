@@ -1000,10 +1000,11 @@
         html += proposalLogoHtml();
         html += '<div class="proposal-section-title">מפרט ניקיון שוטף- הצעת מחיר ראשונית</div>';
         html += '<div class="proposal-block">';
+        const costColumns = proposalCostColumns(quote);
         html += '<table class="proposal-cost-table"><tbody>';
-        html += '<tr><th>פירוט</th><th>מרכיבי העלות</th><th>מרכיבי העלות</th></tr>';
-        html += '<tr><td>עלות לשעת ניקיון</td><td>' + costComponentLabels().map(escapeHtml).join('<br>') + '</td><td>' + costComponentValues(quote).map(value => escapeHtml(formatMoney(value))).join('<br>') + '</td></tr>';
-        html += '<tr><td colspan="2"><strong>סה&quot;כ עלות שעתית לפני מע&quot;מ</strong></td><td><strong>' + escapeHtml(formatWholeMoney(quote.breakdown.totalHourlyCost)) + '</strong></td></tr>';
+        html += '<tr><th>פירוט</th><th>מרכיבי העלות</th>' + costColumns.map(column => '<th>' + escapeHtml(column.title) + '</th>').join('') + '</tr>';
+        html += '<tr><td>עלות לשעת ניקיון</td><td>' + costComponentLabels().map(escapeHtml).join('<br>') + '</td>' + costColumns.map(column => '<td>' + column.values.map(value => escapeHtml(formatMoney(value))).join('<br>') + '</td>').join('') + '</tr>';
+        html += '<tr><td colspan="2"><strong>סה&quot;כ עלות שעתית לפני מע&quot;מ</strong></td>' + costColumns.map(column => '<td><strong>' + escapeHtml(formatWholeMoney(column.total)) + '</strong></td>').join('') + '</tr>';
         html += '</tbody></table></div>';
 
         html += '<div class="proposal-block"><h3>כוח אדם והיקף עבודה</h3>';
@@ -1011,8 +1012,8 @@
         const defaultProposalRate = proposalDefaultRate(quote);
         quote.sites.forEach(site => {
           site.groups.forEach(group => {
-            const groupProposalRate = proposalGroupRate(group, defaultProposalRate);
-            const groupProposalMonthlyPrice = proposalGroupMonthlyPrice(group, defaultProposalRate);
+            const groupProposalRate = proposalGroupRate(group, defaultProposalRate, quote);
+            const groupProposalMonthlyPrice = proposalGroupMonthlyPrice(group, defaultProposalRate, quote);
             html += '<tr>';
             if (quote.sites.length > 1) html += '<td>' + escapeHtml(site.name) + '</td>';
             html += '<td>' + escapeHtml(group.role) + '</td>';
@@ -1075,29 +1076,115 @@
       ];
     }
 
-    function proposalDefaultRate(quote) {
-      let separateMonthlyPrice = 0;
-      let separateMonthlyHours = 0;
+    function proposalCostColumns(quote) {
+      const margin = proposalMargin(quote);
+      const sharedTravelHourlyCost = proposalSharedTravelHourlyCostBeforeMargin(quote);
+      const defaultRate = proposalDefaultRate(quote);
+      const columns = [];
+      const defaultGroups = [];
+      let groupNumber = 1;
 
       quote.sites.forEach(site => {
         site.groups.forEach(group => {
-          if (!group.separateRate) return;
-          separateMonthlyPrice += group.monthlyPrice;
-          separateMonthlyHours += group.monthlyHours;
+          if (group.separateRate) {
+            columns.push(proposalCostColumnForGroups(group.role + " - קבוצה " + groupNumber, [group], quote, margin));
+          } else {
+            defaultGroups.push(group);
+          }
+          groupNumber += 1;
         });
       });
 
-      const defaultHours = quote.monthlyHours - separateMonthlyHours;
-      if (defaultHours <= 0) return quote.finalPrice;
-      return (quote.monthlyPrice - separateMonthlyPrice) / defaultHours;
+      if (defaultGroups.length > 0) {
+        columns.unshift(proposalCostColumnForGroups("תעריף רגיל", defaultGroups, quote, margin, defaultRate, sharedTravelHourlyCost));
+      }
+
+      return columns.length ? columns : [{
+        title: "תעריף שעתי",
+        values: costComponentValues(quote),
+        total: quote.breakdown.totalHourlyCost
+      }];
     }
 
-    function proposalGroupRate(group, defaultRate) {
-      return group.separateRate ? group.finalPrice : defaultRate;
+    function proposalCostColumnForGroups(title, groups, quote, margin, explicitRate, explicitSharedTravelHourlyCost) {
+      const monthlyHours = groups.reduce((sum, group) => sum + group.monthlyHours, 0);
+      const baseMonthlyCost = groups.reduce((sum, group) => sum + group.breakdown.baseMonthlyCost, 0);
+      const socialMonthlyCost = groups.reduce((sum, group) => sum + group.breakdown.socialMonthlyCost, 0);
+      const baseHourlyCost = monthlyHours > 0 ? baseMonthlyCost / monthlyHours : 0;
+      const socialHourlyCost = monthlyHours > 0 ? socialMonthlyCost / monthlyHours : 0;
+      const sharedTravelHourlyCost = explicitSharedTravelHourlyCost ?? proposalSharedTravelHourlyCostBeforeMargin(quote);
+      const total = explicitRate ?? proposalGroupRate(groups[0], proposalDefaultRate(quote), quote);
+      const overheadProfitHourly = total - baseHourlyCost - socialHourlyCost - sharedTravelHourlyCost - quote.breakdown.travelSocialHourlyCost;
+
+      return {
+        title,
+        values: [
+          baseHourlyCost,
+          socialHourlyCost,
+          sharedTravelHourlyCost,
+          quote.breakdown.travelSocialHourlyCost,
+          overheadProfitHourly
+        ],
+        total
+      };
     }
 
-    function proposalGroupMonthlyPrice(group, defaultRate) {
-      return proposalGroupRate(group, defaultRate) * group.monthlyHours;
+    function proposalCostTableRows(quote) {
+      const columns = proposalCostColumns(quote);
+      return [
+        ["פירוט", "מרכיבי העלות", ...columns.map(column => column.title)],
+        ["עלות לשעת ניקיון", costComponentLabels().join("\n"), ...columns.map(column => column.values.map(formatMoney).join("\n"))],
+        ["סה\"כ עלות שעתית לפני מע\"מ", "", ...columns.map(column => formatWholeMoney(column.total))]
+      ];
+    }
+
+    function proposalDefaultRate(quote) {
+      const margin = proposalMargin(quote);
+      const sharedHourlyRate = proposalSharedTravelHourlyRate(quote, margin);
+      let defaultLaborMonthlyCost = 0;
+      let defaultMonthlyHours = 0;
+
+      quote.sites.forEach(site => {
+        site.groups.forEach(group => {
+          if (group.separateRate) return;
+          defaultLaborMonthlyCost += proposalGroupLaborMonthlyCost(group);
+          defaultMonthlyHours += group.monthlyHours;
+        });
+      });
+
+      if (defaultMonthlyHours <= 0) return quote.finalPrice;
+      return priceFromCostAndFinalMargin(defaultLaborMonthlyCost / defaultMonthlyHours, margin) + sharedHourlyRate;
+    }
+
+    function proposalGroupRate(group, defaultRate, quote) {
+      if (!group.separateRate) return defaultRate;
+      const margin = proposalMargin(quote);
+      return priceFromCostAndFinalMargin(proposalGroupLaborMonthlyCost(group) / group.monthlyHours, margin) + proposalSharedTravelHourlyRate(quote, margin);
+    }
+
+    function proposalGroupMonthlyPrice(group, defaultRate, quote) {
+      return proposalGroupRate(group, defaultRate, quote) * group.monthlyHours;
+    }
+
+    function proposalMargin(quote) {
+      return quote.monthlyPrice > 0 ? quote.profit / quote.monthlyPrice : 0;
+    }
+
+    function proposalGroupLaborMonthlyCost(group) {
+      return group.breakdown.baseMonthlyCost + group.breakdown.socialMonthlyCost;
+    }
+
+    function proposalSharedTravelHourlyRate(quote, margin) {
+      const sharedTravelMonthlyCost =
+        quote.breakdown.travelMonthlyCost +
+        quote.breakdown.driverBonusMonthlyCost +
+        quote.breakdown.travelSocialMonthlyCost;
+
+      return priceFromCostAndFinalMargin(sharedTravelMonthlyCost / quote.monthlyHours, margin);
+    }
+
+    function proposalSharedTravelHourlyCostBeforeMargin(quote) {
+      return (quote.breakdown.travelMonthlyCost + quote.breakdown.driverBonusMonthlyCost) / quote.monthlyHours;
     }
 
     function proposalIntroParagraphs() {
@@ -1315,11 +1402,7 @@
       parts.push(wordPageBreak());
 
       parts.push(wordParagraph("מפרט ניקיון שוטף- הצעת מחיר ראשונית", { bold: true, size: 28, align: "center" }));
-      parts.push(wordTable([
-        ["פירוט", "מרכיבי העלות", "מרכיבי העלות"],
-        ["עלות לשעת ניקיון", costComponentLabels().join("\n"), costComponentValues(quote).map(formatMoney).join("\n")],
-        ["סה\"כ עלות שעתית לפני מע\"מ", "", formatWholeMoney(quote.breakdown.totalHourlyCost)]
-      ], { headerFill: "D9D2E9", totalFill: "B4A7D6" }));
+      parts.push(wordTable(proposalCostTableRows(quote), { headerFill: "D9D2E9", totalFill: "B4A7D6" }));
 
       parts.push(wordParagraph(""));
       parts.push(wordHeading("כוח אדם והיקף עבודה"));
@@ -1327,8 +1410,8 @@
       const defaultProposalRate = proposalDefaultRate(quote);
       quote.sites.forEach(site => {
         site.groups.forEach(group => {
-          const groupProposalRate = proposalGroupRate(group, defaultProposalRate);
-          const groupProposalMonthlyPrice = proposalGroupMonthlyPrice(group, defaultProposalRate);
+          const groupProposalRate = proposalGroupRate(group, defaultProposalRate, quote);
+          const groupProposalMonthlyPrice = proposalGroupMonthlyPrice(group, defaultProposalRate, quote);
           const row = [
             group.role,
             formatNumber(group.workers),
@@ -1544,6 +1627,7 @@
     }
 
     function buildSummaryRows(quote, clientName, quoteDate, validUntil) {
+      const costColumns = proposalCostColumns(quote);
       const rows = [
         ["הצעת מחיר לשירותי ניקיון"],
         ["שם לקוח", clientName],
@@ -1552,13 +1636,13 @@
         ["אשת קשר", "שירה מזרחי"],
         [],
         ["פירוט עלות שעתית"],
-        ["רכיב", "עלות שעתית", "אומדן חודשי"],
-        ["בסיס", roundForExcel(quote.breakdown.baseHourlyCost), roundForExcel(quote.breakdown.baseMonthlyCost)],
-        ["עלויות מעביד וסוציאליות", roundForExcel(quote.breakdown.socialHourlyCost), roundForExcel(quote.breakdown.socialMonthlyCost)],
-        ["נסיעות", roundForExcel(quote.breakdown.travelHourlyCost + quote.breakdown.driverBonusHourlyCost), roundForExcel(quote.breakdown.travelMonthlyCost + quote.breakdown.driverBonusMonthlyCost)],
-        ["סוציאליות על נסיעות 5%", roundForExcel(quote.breakdown.travelSocialHourlyCost), roundForExcel(quote.breakdown.travelSocialMonthlyCost)],
-        ["תקורה ורווח", roundForExcel(quote.breakdown.overheadProfitHourly), roundForExcel(quote.breakdown.overheadProfitMonthly)],
-        ["עלות שעתית כוללת ללקוח", roundForExcel(quote.breakdown.totalHourlyCost), roundForExcel(quote.monthlyPrice)],
+        ["רכיב", ...costColumns.map(column => column.title)],
+        ["בסיס", ...costColumns.map(column => roundForExcel(column.values[0]))],
+        ["עלויות מעביד וסוציאליות", ...costColumns.map(column => roundForExcel(column.values[1]))],
+        ["נסיעות", ...costColumns.map(column => roundForExcel(column.values[2]))],
+        ["סוציאליות על נסיעות 5%", ...costColumns.map(column => roundForExcel(column.values[3]))],
+        ["תקורה ורווח", ...costColumns.map(column => roundForExcel(column.values[4]))],
+        ["עלות שעתית כוללת ללקוח", ...costColumns.map(column => roundForExcel(column.total))],
         [],
         ["כוח אדם והיקף עבודה"],
         ["אתר", "תפקיד", "עובדות", "פירוט שעות", "תעריף שעתי", "אומדן חודשי"]
@@ -1567,8 +1651,8 @@
       const defaultProposalRate = proposalDefaultRate(quote);
       quote.sites.forEach(site => {
         site.groups.forEach(group => {
-          const groupProposalRate = proposalGroupRate(group, defaultProposalRate);
-          const groupProposalMonthlyPrice = proposalGroupMonthlyPrice(group, defaultProposalRate);
+          const groupProposalRate = proposalGroupRate(group, defaultProposalRate, quote);
+          const groupProposalMonthlyPrice = proposalGroupMonthlyPrice(group, defaultProposalRate, quote);
           rows.push([
             site.name,
             group.role,
