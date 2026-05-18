@@ -71,6 +71,12 @@
       background: #fff;
       color: #111827;
     }
+    input[type="checkbox"] {
+      width: 20px;
+      min-height: 20px;
+      justify-self: start;
+      accent-color: #b4a7d6;
+    }
     input[readonly] { background: #f2f4f7; }
     button {
       min-height: 38px;
@@ -474,6 +480,7 @@
         <label>שם תפקיד<input class="role"></label>
         <label>עובדות<input class="workers" type="number" min="1" step="1"></label>
         <label>שכר שעתי<input class="wage" type="number" min="0" step="1"></label>
+        <label>תעריף נפרד בהצעה<input class="separateRate" type="checkbox"></label>
       </div>
       <div class="schedule-wrap">
         <table class="schedule-table">
@@ -557,6 +564,7 @@
         role: "עובדת ניקיון",
         workers: 1,
         wage: 39.11,
+        separateRate: false,
         schedule: {
           sun: { hours: 6, overtime: 0 },
           mon: { hours: 6, overtime: 0 },
@@ -652,6 +660,7 @@
         weeklySchedule: normalizedSchedule,
         scheduleSummary: formatScheduleSummary(normalizedSchedule),
         activeDaysPerWeek,
+        separateRate: Boolean(group.separateRate),
         weeklyRegularHours,
         weeklyOvertimeHours,
         monthlyOvertimeHours,
@@ -834,6 +843,7 @@
       bindText(template.querySelector(".role"), group.role, value => group.role = value || "עובדת ניקיון");
       bindNumber(template.querySelector(".workers"), group.workers, value => group.workers = Math.max(1, Math.round(value)));
       bindNumber(template.querySelector(".wage"), group.wage, value => group.wage = Math.max(0, value));
+      bindCheckbox(template.querySelector(".separateRate"), Boolean(group.separateRate), value => group.separateRate = value);
       renderScheduleInputs(template, group);
 
       const removeButton = template.querySelector(".removeGroup");
@@ -924,6 +934,15 @@
       });
     }
 
+    function bindCheckbox(input, value, update) {
+      input.checked = value;
+      input.addEventListener("change", () => {
+        update(input.checked);
+        renderSummary();
+        renderProposal();
+      });
+    }
+
     function metric(label, value) {
       return '<div class="metric"><span>' + label + '</span><strong>' + value + '</strong></div>';
     }
@@ -989,17 +1008,18 @@
 
         html += '<div class="proposal-block"><h3>כוח אדם והיקף עבודה</h3>';
         html += '<table><thead><tr>' + (quote.sites.length > 1 ? '<th>אתר</th>' : '') + '<th>תפקיד</th><th>עובדות</th><th>שעות</th><th>תעריף שעתי</th><th>אומדן חודשי</th></tr></thead><tbody>';
-        const uniformProposalRate = quote.finalPrice;
+        const defaultProposalRate = proposalDefaultRate(quote);
         quote.sites.forEach(site => {
           site.groups.forEach(group => {
-            const uniformGroupMonthlyPrice = uniformProposalRate * group.monthlyHours;
+            const groupProposalRate = proposalGroupRate(group, defaultProposalRate);
+            const groupProposalMonthlyPrice = proposalGroupMonthlyPrice(group, defaultProposalRate);
             html += '<tr>';
             if (quote.sites.length > 1) html += '<td>' + escapeHtml(site.name) + '</td>';
             html += '<td>' + escapeHtml(group.role) + '</td>';
             html += '<td>' + formatNumber(group.workers) + '</td>';
             html += '<td>' + escapeHtml(group.scheduleSummary) + '<br>' + formatNumber(group.monthlyHours) + ' שעות חודשיות</td>';
-            html += '<td>' + formatWholeMoney(uniformProposalRate) + '</td>';
-            html += '<td>' + formatMoney(uniformGroupMonthlyPrice) + '</td>';
+            html += '<td>' + formatWholeMoney(groupProposalRate) + '</td>';
+            html += '<td>' + formatMoney(groupProposalMonthlyPrice) + '</td>';
             html += '</tr>';
           });
         });
@@ -1053,6 +1073,31 @@
         quote.breakdown.travelSocialHourlyCost,
         quote.breakdown.overheadProfitHourly
       ];
+    }
+
+    function proposalDefaultRate(quote) {
+      let separateMonthlyPrice = 0;
+      let separateMonthlyHours = 0;
+
+      quote.sites.forEach(site => {
+        site.groups.forEach(group => {
+          if (!group.separateRate) return;
+          separateMonthlyPrice += group.monthlyPrice;
+          separateMonthlyHours += group.monthlyHours;
+        });
+      });
+
+      const defaultHours = quote.monthlyHours - separateMonthlyHours;
+      if (defaultHours <= 0) return quote.finalPrice;
+      return (quote.monthlyPrice - separateMonthlyPrice) / defaultHours;
+    }
+
+    function proposalGroupRate(group, defaultRate) {
+      return group.separateRate ? group.finalPrice : defaultRate;
+    }
+
+    function proposalGroupMonthlyPrice(group, defaultRate) {
+      return proposalGroupRate(group, defaultRate) * group.monthlyHours;
     }
 
     function proposalIntroParagraphs() {
@@ -1279,16 +1324,17 @@
       parts.push(wordParagraph(""));
       parts.push(wordHeading("כוח אדם והיקף עבודה"));
       const workforceRows = [quote.sites.length > 1 ? ["אתר", "תפקיד", "עובדות", "פירוט שעות", "תעריף שעתי", "אומדן חודשי"] : ["תפקיד", "עובדות", "פירוט שעות", "תעריף שעתי", "אומדן חודשי"]];
-      const uniformProposalRate = quote.finalPrice;
+      const defaultProposalRate = proposalDefaultRate(quote);
       quote.sites.forEach(site => {
         site.groups.forEach(group => {
-          const uniformGroupMonthlyPrice = uniformProposalRate * group.monthlyHours;
+          const groupProposalRate = proposalGroupRate(group, defaultProposalRate);
+          const groupProposalMonthlyPrice = proposalGroupMonthlyPrice(group, defaultProposalRate);
           const row = [
             group.role,
             formatNumber(group.workers),
             group.scheduleSummary + "; סה״כ " + formatNumber(group.monthlyHours) + " שעות חודשיות",
-            formatWholeMoney(uniformProposalRate),
-            formatMoney(uniformGroupMonthlyPrice)
+            formatWholeMoney(groupProposalRate),
+            formatMoney(groupProposalMonthlyPrice)
           ];
           if (quote.sites.length > 1) row.unshift(site.name);
           workforceRows.push(row);
@@ -1388,7 +1434,7 @@
         ["אשת קשר", "שירה מזרחי"],
         ["רווח מתוך מחיר סופי", percent(margin)],
         [],
-        ["אתר", "ק״מ לכיוון אחד", "נסיעות למשמרת", "בונוס מסיעה יומי", "תפקיד", "עובדות", "שכר שעתי", "יום", "שעות רגילות", "שעות נוספות", "תעריף שבת"]
+        ["אתר", "ק״מ לכיוון אחד", "נסיעות למשמרת", "בונוס מסיעה יומי", "תפקיד", "תעריף נפרד בהצעה", "עובדות", "שכר שעתי", "יום", "שעות רגילות", "שעות נוספות", "תעריף שבת"]
       ];
 
       sites.forEach(site => {
@@ -1401,6 +1447,7 @@
               site.trips,
               site.driverBonus || 0,
               group.role,
+              group.separateRate ? "כן" : "לא",
               group.workers,
               group.wage,
               day.label,
@@ -1421,6 +1468,7 @@
         [
           "אתר",
           "תפקיד",
+          "תעריף נפרד בהצעה",
           "עובדות",
           "ימי עבודה בשבוע",
           "שעות רגילות בשבוע",
@@ -1446,6 +1494,7 @@
           rows.push([
             site.name,
             group.role,
+            group.separateRate ? "כן" : "לא",
             group.workers,
             group.daysPerWeek,
             roundForExcel(group.weeklyRegularHours),
@@ -1468,6 +1517,7 @@
 
         rows.push([
           "סה״כ " + site.name,
+          "",
           "",
           "",
           "",
@@ -1514,16 +1564,18 @@
         ["אתר", "תפקיד", "עובדות", "פירוט שעות", "תעריף שעתי", "אומדן חודשי"]
       ];
 
+      const defaultProposalRate = proposalDefaultRate(quote);
       quote.sites.forEach(site => {
         site.groups.forEach(group => {
-          const uniformGroupMonthlyPrice = quote.finalPrice * group.monthlyHours;
+          const groupProposalRate = proposalGroupRate(group, defaultProposalRate);
+          const groupProposalMonthlyPrice = proposalGroupMonthlyPrice(group, defaultProposalRate);
           rows.push([
             site.name,
             group.role,
             group.workers,
             group.scheduleSummary + "; סה״כ " + roundForExcel(group.monthlyHours) + " שעות חודשיות",
-            roundForExcel(quote.finalPrice),
-            roundForExcel(uniformGroupMonthlyPrice)
+            roundForExcel(groupProposalRate),
+            roundForExcel(groupProposalMonthlyPrice)
           ]);
         });
       });
