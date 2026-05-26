@@ -641,10 +641,8 @@
       const monthlyOvertimeHours = group.workers * weeklyOvertimeHours * WEEKS_PER_MONTH;
       const regularCost = group.workers * weeklyRegularCostPerWorker * WEEKS_PER_MONTH;
       const overtimeCost = group.workers * weeklyOvertimeCostPerWorker * WEEKS_PER_MONTH;
-      const dailyTravel = site.km * 2 * site.trips * KM_COST_PER_KM;
-      const dailyDriverBonus = Math.max(0, number(site.driverBonus, 0));
-      const travelCost = group.workers * activeDaysPerWeek * WEEKS_PER_MONTH * dailyTravel;
-      const driverBonusCost = group.workers * activeDaysPerWeek * WEEKS_PER_MONTH * dailyDriverBonus;
+      const travelCost = 0;
+      const driverBonusCost = 0;
       const travelAndDriverBonusCost = travelCost + driverBonusCost;
       const travelSocialCost = travelAndDriverBonusCost * TRAVEL_SOCIAL_RATE;
       const monthlyCost = regularCost + overtimeCost + travelAndDriverBonusCost + travelSocialCost;
@@ -696,7 +694,7 @@
     function calculateQuote() {
       const margin = readMargin();
       const calculatedSites = sites.map(site => {
-        const groups = site.groups.map(group => calculateGroup(group, site, margin));
+        const groups = applySiteTravelCosts(site, site.groups.map(group => calculateGroup(group, site, margin)), margin);
         const monthlyHours = groups.reduce((sum, group) => sum + group.monthlyHours, 0);
         const monthlyCost = groups.reduce((sum, group) => sum + group.monthlyCost, 0);
         const monthlyPrice = groups.reduce((sum, group) => sum + group.monthlyPrice, 0);
@@ -725,6 +723,56 @@
         profit: monthlyPrice - monthlyCost,
         breakdown: sumBreakdown(calculatedSites)
       };
+    }
+
+    function applySiteTravelCosts(site, groups, margin) {
+      const monthlyHours = groups.reduce((sum, group) => sum + group.monthlyHours, 0);
+      if (monthlyHours <= 0) return groups;
+
+      const siteActiveDays = WEEK_DAYS.filter(day =>
+        groups.some(group => {
+          const daySchedule = group.weeklySchedule[day.key];
+          return daySchedule && daySchedule.hours + daySchedule.overtime > 0;
+        })
+      ).length;
+
+      const dailyTravel = site.km * 2 * site.trips * KM_COST_PER_KM;
+      const dailyDriverBonus = Math.max(0, number(site.driverBonus, 0));
+      const siteTravelMonthlyCost = siteActiveDays * WEEKS_PER_MONTH * dailyTravel;
+      const siteDriverBonusMonthlyCost = siteActiveDays * WEEKS_PER_MONTH * dailyDriverBonus;
+      const siteTravelSocialMonthlyCost = (siteTravelMonthlyCost + siteDriverBonusMonthlyCost) * TRAVEL_SOCIAL_RATE;
+
+      return groups.map(group => {
+        const share = group.monthlyHours / monthlyHours;
+        const travelCost = siteTravelMonthlyCost * share;
+        const driverBonusCost = siteDriverBonusMonthlyCost * share;
+        const travelSocialCost = siteTravelSocialMonthlyCost * share;
+        const monthlyCost = group.monthlyCost + travelCost + driverBonusCost + travelSocialCost;
+        const hourlyCost = monthlyCost / group.monthlyHours;
+        const finalPrice = priceFromCostAndFinalMargin(hourlyCost, margin);
+        const monthlyPrice = finalPrice * group.monthlyHours;
+
+        return {
+          ...group,
+          hourlyCost,
+          finalPrice,
+          monthlyCost,
+          monthlyPrice,
+          profit: monthlyPrice - monthlyCost,
+          breakdown: {
+            ...group.breakdown,
+            travelMonthlyCost: travelCost,
+            driverBonusMonthlyCost: driverBonusCost,
+            travelSocialMonthlyCost: travelSocialCost,
+            overheadProfitMonthly: monthlyPrice - monthlyCost,
+            travelHourlyCost: travelCost / group.monthlyHours,
+            driverBonusHourlyCost: driverBonusCost / group.monthlyHours,
+            travelSocialHourlyCost: travelSocialCost / group.monthlyHours,
+            overheadProfitHourly: finalPrice - hourlyCost,
+            totalHourlyCost: finalPrice
+          }
+        };
+      });
     }
 
     function priceFromCostAndFinalMargin(cost, margin) {
