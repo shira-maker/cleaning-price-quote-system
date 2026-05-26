@@ -643,8 +643,8 @@
       const overtimeCost = group.workers * weeklyOvertimeCostPerWorker * WEEKS_PER_MONTH;
       const dailyTravel = site.km * 2 * site.trips * KM_COST_PER_KM;
       const dailyDriverBonus = Math.max(0, number(site.driverBonus, 0));
-      const travelCost = activeDaysPerWeek * WEEKS_PER_MONTH * dailyTravel;
-      const driverBonusCost = activeDaysPerWeek * WEEKS_PER_MONTH * dailyDriverBonus;
+      const travelCost = group.workers * activeDaysPerWeek * WEEKS_PER_MONTH * dailyTravel;
+      const driverBonusCost = group.workers * activeDaysPerWeek * WEEKS_PER_MONTH * dailyDriverBonus;
       const travelAndDriverBonusCost = travelCost + driverBonusCost;
       const travelSocialCost = travelAndDriverBonusCost * TRAVEL_SOCIAL_RATE;
       const monthlyCost = regularCost + overtimeCost + travelAndDriverBonusCost + travelSocialCost;
