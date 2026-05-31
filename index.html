@@ -71,11 +71,15 @@
       background: #fff;
       color: #111827;
     }
-    input[type="checkbox"] {
-      width: 20px;
-      min-height: 20px;
-      justify-self: start;
-      accent-color: #b4a7d6;
+    .separate-rate-field {
+      border: 1px solid #d9d2e9;
+      border-radius: 6px;
+      padding: 8px 10px;
+      background: #fbf9ff;
+      color: #1f2933;
+    }
+    .separate-rate-field span {
+      font-weight: 700;
     }
     input[readonly] { background: #f2f4f7; }
     button {
@@ -480,7 +484,7 @@
         <label>שם תפקיד<input class="role"></label>
         <label>עובדות<input class="workers" type="number" min="1" step="1"></label>
         <label>שכר שעתי<input class="wage" type="number" min="0" step="1"></label>
-        <label>תעריף נפרד בהצעה<input class="separateRate" type="checkbox"></label>
+        <label class="separate-rate-field"><span>אופן תעריף בהצעה</span><select class="separateRate"><option value="false">תעריף אחיד</option><option value="true">תעריף נפרד</option></select></label>
       </div>
       <div class="schedule-wrap">
         <table class="schedule-table">
@@ -891,7 +895,7 @@
       bindText(template.querySelector(".role"), group.role, value => group.role = value || "עובדת ניקיון");
       bindNumber(template.querySelector(".workers"), group.workers, value => group.workers = Math.max(1, Math.round(value)));
       bindNumber(template.querySelector(".wage"), group.wage, value => group.wage = Math.max(0, value));
-      bindCheckbox(template.querySelector(".separateRate"), Boolean(group.separateRate), value => group.separateRate = value);
+      bindSelect(template.querySelector(".separateRate"), String(Boolean(group.separateRate)), value => group.separateRate = value === "true");
       renderScheduleInputs(template, group);
 
       const removeButton = template.querySelector(".removeGroup");
