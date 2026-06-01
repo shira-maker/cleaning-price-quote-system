@@ -419,7 +419,7 @@
         <label>שם לקוח<input id="clientName" placeholder="לדוגמה: בית החולים הסקוטי"></label>
         <label>תאריך<input id="quoteDate" type="date"></label>
         <label>בתוקף עד<input id="validUntil" type="date"></label>
-        <label>אשת קשר<select id="contact"><option>שירה מזרחי</option></select></label>
+        <label>אשת קשר<select id="contact"></select></label>
         <label>רווח מתוך מחיר סופי (%)<input id="margin" type="number" min="0" max="99" step="0.1" value="15"></label>
       </div>
 
@@ -527,6 +527,13 @@
       { key: "fri", label: "ו׳", isShabbat: false },
       { key: "sat", label: "שבת", isShabbat: true }
     ];
+    const CONTACT_PEOPLE = [
+      { name: "שירה מזרחי", role: "מנהלת פיתוח עסקי, קואופרטיב אמל" },
+      { name: "סהאם מוחסיין", role: "מנהלת סניף ירושלים, קואופרטיב אמל" },
+      { name: "יערה כנען", role: "מנהלת פיתוח עסקי, קואופרטיב אמל" },
+      { name: "סברין ג'שי", role: "מנהלת סניף ג'סר, קואופרטיב אמל" },
+      { name: "עאישה אבו פריח", role: "מנהלת סניף הנגב, קואופרטיב אמל" }
+    ];
     const sites = [];
 
     const formatMoney = (value) => new Intl.NumberFormat("he-IL", {
@@ -560,6 +567,22 @@
       const month = String(date.getMonth() + 1).padStart(2, "0");
       const day = String(date.getDate()).padStart(2, "0");
       return year + "-" + month + "-" + day;
+    }
+
+    function selectedContact() {
+      const contactName = document.getElementById("contact").value || CONTACT_PEOPLE[0].name;
+      return CONTACT_PEOPLE.find(contact => contact.name === contactName) || CONTACT_PEOPLE[0];
+    }
+
+    function populateContactOptions() {
+      const contactSelect = document.getElementById("contact");
+      contactSelect.innerHTML = "";
+      CONTACT_PEOPLE.forEach(contact => {
+        const option = document.createElement("option");
+        option.value = contact.name;
+        option.textContent = contact.name;
+        contactSelect.appendChild(option);
+      });
     }
 
     function newGroup() {
@@ -1031,6 +1054,7 @@
         const quote = existingQuote || calculateQuote();
         const clientName = document.getElementById("clientName").value.trim() || "לקוח חדש";
         const quoteDate = document.getElementById("quoteDate").value;
+        const contact = selectedContact();
 
         let html = "";
         html += '<div class="proposal-page">';
@@ -1044,7 +1068,7 @@
         html += '<div class="proposal-intro">';
         proposalIntroParagraphs().forEach(text => { html += '<p>' + escapeHtml(text) + '</p>'; });
         html += '</div>';
-        html += '<div class="proposal-signature"><div>בברכה,</div><strong>שירה מזרחי</strong><br>מנהלת פיתוח עסקי, קואופרטיב אמל</div>';
+        html += '<div class="proposal-signature"><div>בברכה,</div><strong>' + escapeHtml(contact.name) + '</strong><br>' + escapeHtml(contact.role) + '</div>';
         html += proposalFooterHtml();
         html += '</div>';
 
@@ -1438,6 +1462,7 @@
 
     function buildWordDocumentXml(quote, clientName, quoteDate, validUntil) {
       const parts = [];
+      const contact = selectedContact();
       parts.push(wordParagraph(formatDate(quoteDate)));
       parts.push(wordParagraph(""));
       parts.push(wordParagraph("לכבוד"));
@@ -1448,8 +1473,8 @@
       proposalIntroParagraphs().forEach(text => parts.push(wordParagraph(text, { align: "both" })));
       parts.push(wordParagraph(""));
       parts.push(wordParagraph("בברכה,"));
-      parts.push(wordParagraph("שירה מזרחי", { bold: true }));
-      parts.push(wordParagraph("מנהלת פיתוח עסקי, קואופרטיב אמל"));
+      parts.push(wordParagraph(contact.name, { bold: true }));
+      parts.push(wordParagraph(contact.role));
       parts.push(wordParagraph(""));
       parts.push(wordPageBreak());
 
@@ -1561,12 +1586,14 @@
     }
 
     function buildInputsRows(clientName, quoteDate, validUntil, margin) {
+      const contact = selectedContact();
       const rows = [
         ["פרטי הצעה"],
         ["שם לקוח", clientName],
         ["תאריך", formatDate(quoteDate)],
         ["בתוקף עד", formatDate(validUntil)],
-        ["אשת קשר", "שירה מזרחי"],
+        ["אשת קשר", contact.name],
+        ["תפקיד אשת קשר", contact.role],
         ["רווח מתוך מחיר סופי", percent(margin)],
         [],
         ["אתר", "ק״מ לכיוון אחד", "נסיעות למשמרת", "בונוס מסיעה יומי", "תפקיד", "תעריף נפרד בהצעה", "עובדות", "שכר שעתי", "יום", "שעות רגילות", "שעות נוספות", "תעריף שבת"]
@@ -1680,12 +1707,14 @@
 
     function buildSummaryRows(quote, clientName, quoteDate, validUntil) {
       const costColumns = proposalCostColumns(quote);
+      const contact = selectedContact();
       const rows = [
         ["הצעת מחיר לשירותי ניקיון"],
         ["שם לקוח", clientName],
         ["תאריך", formatDate(quoteDate)],
         ["בתוקף עד", formatDate(validUntil)],
-        ["אשת קשר", "שירה מזרחי"],
+        ["אשת קשר", contact.name],
+        ["תפקיד אשת קשר", contact.role],
         [],
         ["פירוט עלות שעתית"],
         ["רכיב", ...costColumns.map(column => column.title)],
@@ -1728,8 +1757,8 @@
       rows.push(["ההצעה מבוססת על היקף העבודה והנתונים המפורטים לעיל. שינוי בכמות העובדות, שעות העבודה, ימי העבודה, מרחקי הנסיעה או דרישות השירות עשוי להשפיע על המחיר. התעריפים אינם כוללים מע״מ, אלא אם צוין אחרת. ההצעה תקפה ל־30 יום ממועד הפקתה."]);
       rows.push([]);
       rows.push(["פרטי קשר"]);
-      rows.push(["שירה מזרחי"]);
-      rows.push(["מנהלת פיתוח עסקי, קואופרטיב אמל"]);
+      rows.push([contact.name]);
+      rows.push([contact.role]);
 
       return rows;
     }
@@ -1910,6 +1939,7 @@
 
     function init() {
       const today = new Date();
+      populateContactOptions();
       document.getElementById("quoteDate").value = localDateValue(today);
       document.getElementById("validUntil").value = localDateValue(addDays(today, 30));
       document.getElementById("quoteDate").addEventListener("change", () => {
@@ -1929,6 +1959,10 @@
       });
       document.getElementById("clientName").addEventListener("input", renderSummary);
       document.getElementById("clientName").addEventListener("input", renderProposal);
+      document.getElementById("contact").addEventListener("change", () => {
+        renderSummary();
+        renderProposal();
+      });
       document.getElementById("printProposal").addEventListener("click", printCleanProposal);
       document.getElementById("exportExcel").addEventListener("click", exportExcel);
       document.getElementById("exportWord").addEventListener("click", exportWord);
