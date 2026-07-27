@@ -1088,8 +1088,8 @@
         const defaultProposalRate = proposalDefaultRate(quote);
         quote.sites.forEach(site => {
           site.groups.forEach(group => {
-            const groupProposalRate = proposalGroupRate(group, defaultProposalRate, quote);
-            const groupProposalMonthlyPrice = proposalGroupMonthlyPrice(group, defaultProposalRate, quote);
+            const groupProposalRate = proposalDisplayedRate(group, defaultProposalRate, quote);
+            const groupProposalMonthlyPrice = proposalDisplayedGroupMonthlyPrice(group, defaultProposalRate, quote);
             html += '<tr>';
             if (quote.sites.length > 1) html += '<td>' + escapeHtml(site.name) + '</td>';
             html += '<td>' + escapeHtml(group.role) + '</td>';
@@ -1102,7 +1102,7 @@
         });
         html += '</tbody></table></div>';
 
-        html += '<div class="total-line"><span>סה״כ אומדן חודשי לפני מע״מ</span><strong>' + formatMoney(quote.monthlyPrice) + '</strong></div>';
+        html += '<div class="total-line"><span>סה״כ אומדן חודשי לפני מע״מ</span><strong>' + formatMoney(proposalDisplayedMonthlyTotal(quote)) + '</strong></div>';
         html += proposalFooterHtml();
         html += '</div>';
 
@@ -1240,6 +1240,23 @@
 
     function proposalGroupMonthlyPrice(group, defaultRate, quote) {
       return proposalGroupRate(group, defaultRate, quote) * group.monthlyHours;
+    }
+
+    function proposalDisplayedRate(group, defaultRate, quote) {
+      return Math.round(proposalGroupRate(group, defaultRate, quote));
+    }
+
+    function proposalDisplayedGroupMonthlyPrice(group, defaultRate, quote) {
+      return proposalDisplayedRate(group, defaultRate, quote) * group.monthlyHours;
+    }
+
+    function proposalDisplayedMonthlyTotal(quote) {
+      const defaultProposalRate = proposalDefaultRate(quote);
+      return quote.sites.reduce((total, site) => {
+        return total + site.groups.reduce((siteTotal, group) => {
+          return siteTotal + proposalDisplayedGroupMonthlyPrice(group, defaultProposalRate, quote);
+        }, 0);
+      }, 0);
     }
 
     function proposalMargin(quote) {
@@ -1487,8 +1504,8 @@
       const defaultProposalRate = proposalDefaultRate(quote);
       quote.sites.forEach(site => {
         site.groups.forEach(group => {
-          const groupProposalRate = proposalGroupRate(group, defaultProposalRate, quote);
-          const groupProposalMonthlyPrice = proposalGroupMonthlyPrice(group, defaultProposalRate, quote);
+          const groupProposalRate = proposalDisplayedRate(group, defaultProposalRate, quote);
+          const groupProposalMonthlyPrice = proposalDisplayedGroupMonthlyPrice(group, defaultProposalRate, quote);
           const row = [
             group.role,
             formatNumber(group.workers),
@@ -1503,7 +1520,7 @@
       parts.push(wordTable(workforceRows));
 
       parts.push(wordParagraph(""));
-      parts.push(wordParagraph("סה״כ אומדן חודשי לפני מע״מ: " + formatMoney(quote.monthlyPrice), { bold: true, size: 28 }));
+      parts.push(wordParagraph("סה״כ אומדן חודשי לפני מע״מ: " + formatMoney(proposalDisplayedMonthlyTotal(quote)), { bold: true, size: 28 }));
       parts.push(wordParagraph(""));
       parts.push(wordPageBreak());
 
@@ -1732,8 +1749,8 @@
       const defaultProposalRate = proposalDefaultRate(quote);
       quote.sites.forEach(site => {
         site.groups.forEach(group => {
-          const groupProposalRate = proposalGroupRate(group, defaultProposalRate, quote);
-          const groupProposalMonthlyPrice = proposalGroupMonthlyPrice(group, defaultProposalRate, quote);
+          const groupProposalRate = proposalDisplayedRate(group, defaultProposalRate, quote);
+          const groupProposalMonthlyPrice = proposalDisplayedGroupMonthlyPrice(group, defaultProposalRate, quote);
           rows.push([
             site.name,
             group.role,
@@ -1746,7 +1763,7 @@
       });
 
       rows.push([]);
-      rows.push(["סה״כ אומדן חודשי לפני מע״מ", roundForExcel(quote.monthlyPrice)]);
+      rows.push(["סה״כ אומדן חודשי לפני מע״מ", roundForExcel(proposalDisplayedMonthlyTotal(quote))]);
       rows.push(["סה״כ שעות חודשיות", roundForExcel(quote.monthlyHours)]);
       rows.push(["מחיר שעתי ממוצע", roundForExcel(quote.finalPrice)]);
       rows.push([]);

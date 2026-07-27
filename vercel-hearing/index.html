@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> </title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --ink: #17202a;
+      --muted: #667085;
+      --line: #d8e0e8;
+      --soft: #f5f7fa;
+      --brand: #2f6f73;
+      --brand-dark: #24585b;
+      --warn: #9d2929;
+    }
+    body {
+      margin: 0;
+      font-family: Arial, "Noto Sans Hebrew", sans-serif;
+      background: var(--soft);
+      color: var(--ink);
+    }
+    button, input, select, textarea { font: inherit; }
+    .topbar {
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      padding: 18px 26px;
+    }
+    .topbar h1 { margin: 0 0 5px; font-size: 24px; }
+    .topbar p { margin: 0; color: var(--muted); }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 18px;
+      padding: 18px 26px 30px;
+      align-items: start;
+    }
+    .panel, .side, .preview-wrap {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    .panel { padding: 18px; }
+    .side { position: sticky; top: 14px; overflow: hidden; }
+    h2 { margin: 0 0 14px; font-size: 18px; }
+    h3 { margin: 18px 0 10px; font-size: 16px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(150px, 1fr));
+      gap: 13px;
+    }
+    label { display: grid; gap: 6px; color: #475467; font-size: 14px; }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #cbd5df;
+      border-radius: 6px;
+      background: #fff;
+      color: #111827;
+      padding: 8px 10px;
+      min-height: 40px;
+    }
+    textarea { min-height: 96px; resize: vertical; line-height: 1.55; }
+    .wide { grid-column: 1 / -1; }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 16px;
+      align-items: center;
+    }
+    button {
+      border: 1px solid #a7b4c2;
+      border-radius: 6px;
+      min-height: 38px;
+      padding: 8px 12px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    button:hover { background: #f0f4f7; }
+    .primary { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .primary:hover { background: var(--brand-dark); }
+    .danger { color: var(--warn); border-color: #d0a2a2; }
+    .segmented { display: inline-flex; border: 1px solid #a7b4c2; border-radius: 6px; overflow: hidden; }
+    .segmented button { border: 0; border-radius: 0; min-width: 82px; }
+    .segmented button.active { background: var(--brand); color: #fff; }
+    .summary-head { padding: 16px; border-bottom: 1px solid #e6ebf0; }
+    .summary-head h2 { margin: 0 0 4px; }
+    .summary-head p { margin: 0; color: var(--muted); }
+    .summary-body { padding: 16px; display: grid; gap: 12px; }
+    .check {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid #eef2f5;
+      padding-bottom: 9px;
+      font-size: 14px;
+    }
+    .check strong { color: var(--brand); }
+    .missing strong { color: var(--warn); }
+    .history { display: grid; gap: 8px; max-height: 260px; overflow: auto; }
+    .history-item {
+      border: 1px solid #e1e7ee;
+      border-radius: 6px;
+      padding: 9px;
+      background: #fbfcfd;
+      display: grid;
+      gap: 5px;
+      font-size: 13px;
+    }
+    .history-item button { min-height: 32px; padding: 5px 8px; }
+    .preview-wrap { margin: 0 26px 34px; overflow: hidden; }
+    .preview-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      align-items: center;
+    }
+    .preview-toolbar p { margin: 4px 0 0; color: var(--muted); }
+    .paper-shell { padding: 22px; overflow-x: auto; background: #eef2f5; }
+    .paper {
+      width: 794px;
+      min-height: 1123px;
+      margin: 0 auto;
+      background: #fff;
+      box-shadow: 0 8px 28px rgba(15, 23, 42, .12);
+      padding: 74px 72px 132px;
+      position: relative;
+      font-family: Calibri, Arial, sans-serif;
+      line-height: 1.55;
+      font-size: 18px;
+      overflow: hidden;
+    }
+    .letterhead-page {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      pointer-events: none;
+      user-select: none;
+    }
+    .letter {
+      position: relative;
+      z-index: 1;
+    }
+    .letter[dir="ltr"] { text-align: left; font-family: Calibri, Arial, sans-serif; }
+    .letter[dir="rtl"] { text-align: right; }
+    .letter p { margin: 0 0 12px; }
+    .reason-item {
+      display: flex;
+      gap: 8px;
+      margin: 0 0 8px;
+      align-items: flex-start;
+    }
+    .reason-number {
+      min-width: 22px;
+      font-weight: 700;
+    }
+    .sub-reason {
+      margin-right: 30px;
+    }
+    .sub-reason .reason-number {
+      min-width: 34px;
+    }
+    .subject { text-align: center; font-weight: 700; text-decoration: underline; margin: 18px 0; }
+    .signature { margin-top: 28px; }
+    .editable {
+      outline: none;
+      border: 1px dashed transparent;
+      border-radius: 6px;
+      padding: 6px;
+    }
+    .editable:focus { border-color: #8fb6ba; background: #fbffff; }
+    .hint { color: var(--muted); font-size: 13px; }
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; padding: 14px; }
+      .side { position: static; }
+      .grid { grid-template-columns: 1fr; }
+      .preview-wrap { margin: 0 14px 24px; }
+      .preview-toolbar { align-items: flex-start; flex-direction: column; }
+      .paper { transform-origin: top center; width: 100%; min-height: auto; padding: 56px 30px 100px; }
+    }
+    @media print {
+      @page { size: A4; margin: 0; }
+      body { background: #fff; }
+      .topbar, .layout, .preview-toolbar { display: none !important; }
+      .preview-wrap, .paper-shell { margin: 0; padding: 0; border: 0; background: #fff; overflow: visible; }
+      .paper {
+        width: 210mm;
+        min-height: 297mm;
+        margin: 0;
+        box-shadow: none;
+        padding: 19mm 19mm 35mm;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+      .editable { border: 0; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <h1>מערכת מכתבי שימוע</h1>
+    <p>הכנת זימון לשימוע בנוסח אחיד, עם בדיקת פרטים חסרים והפקה ל-PDF</p>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <h2>פרטי המכתב</h2>
+      <div class="grid">
+        <label>סוג השימוע
+          <select id="hearingType">
+            <option value="dismissal">שימוע לפני פיטורים</option>
+            <option value="scope">שימוע לפני שינוי בהיקף משרה</option>
+            <option value="conditions">שימוע לפני הרעה בתנאים</option>
+            <option value="disciplinary">שימוע משמעתי</option>
+          </select>
+        </label>
+        <label>מנהלת הסניף
+          <select id="manager"></select>
+        </label>
+        <label>תאריך המכתב
+          <input id="letterDate" type="date">
+        </label>
+        <label>שם העובד/ת
+          <input id="employeeName">
+        </label>
+        <label>מין העובד/ת
+          <select id="employeeGender">
+            <option value="female">אישה</option>
+            <option value="male">גבר</option>
+          </select>
+        </label>
+        <label>תעודת זהות
+          <input id="employeeId" inputmode="numeric">
+        </label>
+        <label>תפקיד
+          <input id="role">
+        </label>
+        <label>מקום עבודה
+          <input id="workplace">
+        </label>
+        <label>תאריך תחילת עבודה
+          <input id="startDate" type="date">
+        </label>
+        <label>מקום השימוע
+          <input id="hearingPlace">
+        </label>
+        <label>תאריך השימוע
+          <input id="hearingDate" type="date">
+        </label>
+        <label>שעת השימוע
+          <input id="hearingTime" type="time">
+        </label>
+        <label>מועד אחרון לטענות בכתב
+          <input id="writtenDeadline" type="date">
+        </label>
+        <label class="wide">מי ישתתף בשימוע
+          <input id="participants">
+        </label>
+        <label class="wide">סיבת הזימון
+          <textarea id="reason" placeholder="כתבי כל סיבה בשורה נפרדת. לדוגמה:&#10;קצב העבודה אינו תואם את דרישות מקום העבודה.&#10;התקבלו תלונות על איחורים חוזרים."></textarea>
+        </label>
+      </div>
+      <div class="actions">
+        <button class="primary" id="saveHistory">שמירה להיסטוריה</button>
+        <button id="fillExample">מילוי דוגמה</button>
+        <button id="clearForm" class="danger">ניקוי טופס</button>
+        <span class="hint">אפשר לערוך ידנית את המכתב בתצוגה למטה לפני שמירה ל-PDF. המעבר לערבית מתרגם את סיבת הזימון אוטומטית.</span>
+      </div>
+    </section>
+
+    <aside class="side">
+      <div class="summary-head">
+        <h2>בדיקה לפני הפקה</h2>
+        <p>המערכת מסמנת פרטים שחסרים במכתב</p>
+      </div>
+      <div class="summary-body">
+        <div id="checks"></div>
+        <h3>היסטוריה</h3>
+        <div id="history" class="history"></div>
+      </div>
+    </aside>
+  </main>
+
+  <section class="preview-wrap">
+    <div class="preview-toolbar">
+      <div>
+        <h2>תצוגת מכתב</h2>
+        <p>הטקסט ניתן לעריכה ידנית. אחרי העריכה לוחצים הדפסה / שמירה ל-PDF.</p>
+      </div>
+      <div class="actions" style="margin:0">
+        <span class="segmented">
+          <button id="langHe" class="active" type="button">עברית</button>
+          <button id="langAr" type="button">ערבית</button>
+        </span>
+        <button class="primary" id="printLetter">הדפסה / שמירה ל-PDF</button>
+      </div>
+    </div>
+    <div class="paper-shell">
+      <article id="paper" class="paper">
+        <img id="letterhead" class="letterhead-page" alt="">
+        <div id="letter" class="letter editable" contenteditable="true"></div>
+      </article>
+    </div>
+  </section>
+
+  <script src="letterhead-data.js"></script>
+  <script>
+    const managers = [
+      { id: "saham", name: "סהאם מוחסין", role: "מנהלת סניף ירושלים", branch: "ירושלים" },
+      { id: "sabrin", name: "סברין ג'שי", role: "מנהלת סניף ג'סר", branch: "ג'סר" },
+      { id: "aisha", name: "עאישה אבו פריח", role: "מנהלת סניף נגב", branch: "נגב" }
+    ];
+
+    const hearingTypes = {
+      dismissal: {
+        he: "זימון לשימוע לפני פיטורים",
+        ar: "دعوة لجلسة استماع قبل الفصل",
+        actionHe: "סיום העסקתך",
+        actionAr: "إنهاء عملك"
+      },
+      scope: {
+        he: "זימון לשימוע לפני שינוי בהיקף משרה",
+        ar: "دعوة لجلسة استماع قبل تغيير نطاق الوظيفة",
+        actionHe: "שינוי בהיקף משרתך",
+        actionAr: "تغيير نطاق وظيفتك"
+      },
+      conditions: {
+        he: "זימון לשימוע לפני הרעה בתנאים",
+        ar: "دعوة لجلسة استماع قبل تغيير شروط العمل",
+        actionHe: "שינוי בתנאי העסקתך",
+        actionAr: "تغيير شروط عملك"
+      },
+      disciplinary: {
+        he: "זימון לשימוע משמעתי",
+        ar: "دعوة لجلسة استماع تأديبية",
+        actionHe: "נקיטת צעדים משמעתיים בעניינך",
+        actionAr: "اتخاذ إجراءات تأديبية بخصوصك"
+      }
+    };
+
+    const requiredFields = [
+      ["employeeName", "שם העובד/ת"],
+      ["employeeGender", "מין העובד/ת"],
+      ["employeeId", "תעודת זהות"],
+      ["role", "תפקיד"],
+      ["workplace", "מקום עבודה"],
+      ["startDate", "תאריך תחילת עבודה"],
+      ["reason", "סיבת הזימון"],
+      ["hearingDate", "תאריך השימוע"],
+      ["hearingTime", "שעת השימוע"],
+      ["participants", "מי ישתתף"],
+      ["writtenDeadline", "מועד אחרון לטענות בכתב"]
+    ];
+
+    let language = "he";
+    const $ = id => document.getElementById(id);
+
+    const reasonTranslations = {
+      "קצב עבודתך אינו תואם את דרישות מקום העבודה.": "وتيرة عملك لا تتوافق مع متطلبات مكان العمل.",
+      "הגיעו מספר תלונות מעובדים על צורת דיבור לא מכבדת כלפיהם.": "وصلت عدة شكاوى من عاملين بخصوص أسلوب حديث غير محترم تجاههم.",
+      "הגיעו תלונות על צורת דיבור לא מכבדת.": "وصلت شكاوى بخصوص أسلوب حديث غير محترم.",
+      "מספר רב של פעמים התייצבת באיחור לעבודה.": "حضرتِ إلى العمل متأخرة في مرات عديدة.",
+      "התקבלו תלונות על איחורים חוזרים.": "وصلت شكاوى بخصوص التأخر المتكرر.",
+      "אי התאמה לדרישות התפקיד.": "عدم ملاءمة لمتطلبات الوظيفة.",
+      "צמצום בהיקף העבודה באתר.": "تقليص نطاق العمل في الموقع.",
+      "שינוי בצורכי הסניף.": "تغيير في احتياجات الفرع.",
+      "הפרת נהלי עבודה.": "مخالفة إجراءات العمل.",
+      "התנהלות שאינה תואמת את כללי מקום העבודה.": "تصرف لا يتوافق مع قواعد مكان العمل."
+    };
+
+    const phraseTranslations = [
+      ["קצב העבודה", "وتيرة العمل"],
+      ["קצב עבודתך", "وتيرة عملك"],
+      ["דרישות מקום העבודה", "متطلبات مكان العمل"],
+      ["מקום העבודה", "مكان العمل"],
+      ["אי התאמה", "عدم ملاءمة"],
+      ["דרישות התפקיד", "متطلبات الوظيفة"],
+      ["תלונות", "شكاوى"],
+      ["עובדים", "عاملين"],
+      ["עובדות", "عاملات"],
+      ["צורת דיבור", "أسلوب الحديث"],
+      ["לא מכבדת", "غير محترمة"],
+      ["איחורים חוזרים", "تأخر متكرر"],
+      ["איחור", "تأخر"],
+      ["איחורים", "تأخرات"],
+      ["התייצבת באיחור", "حضرتِ متأخرة"],
+      ["נהלי עבודה", "إجراءات العمل"],
+      ["הפרת נהלים", "مخالفة الإجراءات"],
+      ["הפרת נהלי עבודה", "مخالفة إجراءات العمل"],
+      ["התנהלות שאינה תואמת", "تصرف لا يتوافق"],
+      ["כללי", "قواعد"],
+      ["צמצום בהיקף העבודה", "تقليص نطاق العمل"],
+      ["שינוי בצורכי הסניף", "تغيير في احتياجات الفرع"],
+      ["היקף משרה", "نطاق الوظيفة"],
+      ["תנאי העסקה", "شروط العمل"],
+      ["תנאי העבודה", "شروط العمل"],
+      ["משמעת", "انضباط"],
+      ["יחסי עבודה", "علاقات العمل"],
+      ["התנהגות", "تصرف"],
+      ["שאינה הולמת", "غير ملائم"],
+      ["חוסר שביעות רצון", "عدم رضا"],
+      ["תפקוד מקצועי", "أداء مهني"],
+      ["ביצוע העבודה", "تنفيذ العمل"],
+      ["איכות העבודה", "جودة العمل"]
+    ];
+
+    function todayValue() {
+      const d = new Date();
+      return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, "0"), String(d.getDate()).padStart(2, "0")].join("-");
+    }
+
+    function formatDate(value, lang = "he") {
+      if (!value) return "__________";
+      const date = new Date(value + "T00:00:00");
+      return new Intl.DateTimeFormat(lang === "ar" ? "ar" : "he-IL").format(date);
+    }
+
+    function formatWeekday(value, lang = "he") {
+      if (!value) return "";
+      const date = new Date(value + "T00:00:00");
+      return new Intl.DateTimeFormat(lang === "ar" ? "ar" : "he-IL", { weekday: "long" }).format(date);
+    }
+
+    function value(id, fallback = "") {
+      return $(id).value.trim() || fallback;
+    }
+
+    function selectedManager() {
+      return managers.find(item => item.id === $("manager").value) || managers[0];
+    }
+
+    function selectedType() {
+      return hearingTypes[$("hearingType").value] || hearingTypes.dismissal;
+    }
+
+    function selectedGender() {
+      return $("employeeGender").value === "male" ? "male" : "female";
+    }
+
+    function heGender() {
+      const male = selectedGender() === "male";
+      return {
+        employeeLabel: male ? "שם העובד" : "שם העובדת",
+        started: male ? "התחלת" : "התחלת",
+        invited: male ? "מוזמן" : "מוזמנת",
+        hereby: male ? "הנך" : "הנך",
+        claims: male ? "טענותיך" : "טענותייך",
+        allowed: male ? "רשאי" : "רשאית",
+        represented: male ? "מיוצג" : "מיוצגת",
+        want: male ? "תרצה" : "תרצי",
+        can: male ? "תוכל" : "תוכלי",
+        notify: male ? "הודע" : "הודיעי",
+        send: male ? "תעביר" : "תעבירי",
+        attend: male ? "תתייצב" : "תתייצבי",
+        waived: male ? "וויתר" : "וויתרה",
+        matter: male ? "בעניינו" : "בעניינה"
+      };
+    }
+
+    function arGender() {
+      const male = selectedGender() === "male";
+      return {
+        started: male ? "بدأتَ" : "بدأتِ",
+        invited: male ? "مدعو" : "مدعوة",
+        yourClaims: male ? "ادعاءاتك" : "ادعاءاتك",
+        may: male ? "يحق لك" : "يحق لك",
+        wanted: male ? "رغبتَ" : "رغبتِ",
+        send: male ? "ترسل" : "ترسلي",
+        attend: male ? "تحضر" : "تحضري",
+        considered: male ? "فستعتبرك" : "فستعتبرك",
+        waived: male ? "تنازل" : "تنازلت",
+        right: male ? "حقه" : "حقها",
+        regarding: male ? "بشأنه" : "بشأنها"
+      };
+    }
+
+    function reasonLines(lang) {
+      const text = value("reason");
+      if (lang === "ar") {
+        return text.split(/\n+/).map(line => line.trim()).filter(Boolean).map(translateReasonLine);
+      }
+      return text.split(/\n+/).map(line => line.trim()).filter(Boolean);
+    }
+
+    function normalizeReasonLine(line) {
+      return line.replace(/\s+/g, " ").trim();
+    }
+
+    function translateReasonLine(line) {
+      const normalized = normalizeReasonLine(line);
+      if (reasonTranslations[normalized]) return reasonTranslations[normalized];
+
+      let translated = normalized;
+      phraseTranslations.forEach(([hebrew, arabic]) => {
+        translated = translated.replaceAll(hebrew, arabic);
+      });
+
+      const changed = translated !== normalized;
+      if (!changed) {
+        return "سبب إضافي يتعلق بالعمل وبالعلاقة المهنية كما ورد في سبب الدعوة.";
+      }
+
+      return translated
+        .replaceAll("אינו", "لا")
+        .replaceAll("אינה", "لا")
+        .replaceAll("אינם", "لا")
+        .replaceAll("אינן", "لا")
+        .replaceAll("תואם", "يتوافق")
+        .replaceAll("תואמת", "تتوافق")
+        .replaceAll("את", "")
+        .replaceAll("על", "بخصوص")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function numberedClauseHtml(number, content) {
+      return `<p class="reason-item"><span class="reason-number">${number}.</span><span>${content}</span></p>`;
+    }
+
+    function numberedReasonsHtml(reasons, parentNumber) {
+      return reasons.map((line, index) => (
+        `<p class="reason-item sub-reason"><span class="reason-number">${parentNumber}.${index + 1}</span><span>${escapeHtml(line)}</span></p>`
+      )).join("");
+    }
+
+    function renderHebrewLetter() {
+      const type = selectedType();
+      const manager = selectedManager();
+      const g = heGender();
+      const reasons = reasonLines("he");
+      const reasonsSection = 2;
+      const reasonHtml = reasons.length
+        ? numberedReasonsHtml(reasons, reasonsSection)
+        : "<p>__________</p>";
+      const hearingDay = formatWeekday(value("hearingDate"), "he");
+      const hearingDateText = formatDate(value("hearingDate"), "he");
+      return `
+        <p>${formatDate(value("letterDate"), "he")}</p>
+        <p>באמצעות מסירה אישית / בדואר / במסרון</p>
+        <p>לכבוד,<br><strong>${escapeHtml(value("employeeName", "__________"))}</strong><br>ת.ז. ${escapeHtml(value("employeeId", "__________"))}</p>
+        <p>שלום רב,</p>
+        <p class="subject">הנדון: ${type.he}</p>
+        ${numberedClauseHtml(1, `ביום ${formatDate(value("startDate"), "he")} ${g.started} את עבודתך כ${escapeHtml(value("role", "__________"))}, ומקום עבודתך הינו ${escapeHtml(value("workplace", "__________"))}.`)}
+        ${numberedClauseHtml(2, `הקואופרטיב שוקל את האפשרות של ${type.actionHe}, וזאת מהטעמים הבאים:`)}
+        ${reasonHtml}
+        ${numberedClauseHtml(3, `טרם קבלת החלטה בעניינך ייערך לך שימוע, ולצורך כך ${g.hereby} ${g.invited} להעביר לקואופרטיב, בכתב, את ${g.claims} ביחס לאפשרות ${type.actionHe}, ולצרף כל מסמך שעשוי להיות רלוונטי לצורך גיבוש עמדת הקואופרטיב. את הטיעונים בכתב יש להעביר לא יאוחר מיום ${formatDate(value("writtenDeadline"), "he")}.`)}
+        ${numberedClauseHtml(4, `ישיבת השימוע תתקיים ביום ${hearingDay}, ${hearingDateText}, בשעה ${escapeHtml(value("hearingTime", "__________"))}, במקום: ${escapeHtml(value("hearingPlace", "__________"))}. בשימוע ישתתפו: ${escapeHtml(value("participants", "__________"))}.`)}
+        ${numberedClauseHtml(5, `${g.hereby} ${g.allowed} להגיע לשימוע עם חבר, בן משפחה, נציג או עורך דין, בכפוף לעדכון הקואופרטיב מראש על כוונתך להיות מלווה או ${g.represented} בשימוע.`)}
+        ${numberedClauseHtml(6, `אם ${g.want}, ${g.can} לוותר על זכותך לשימוע. במקרה כזה, אנא ${g.notify} על כך מראש.`)}
+        ${numberedClauseHtml(7, `אם לא ${g.send} את התייחסותך בכתב כאמור במכתב זה, או לא ${g.attend} לישיבת השימוע, יראה אותך הקואופרטיב כמי ש${g.waived} על זכות הטיעון בטרם קבלת החלטה ${g.matter}.`)}
+        ${numberedClauseHtml(8, `לאחר השימוע תתקבל החלטה בעניינך.`)}
+        <p class="signature">בכבוד רב,<br><strong>${manager.name}</strong><br>${manager.role}<br>קואופרטיב אמל</p>
+      `;
+    }
+
+    function renderArabicLetter() {
+      const type = selectedType();
+      const manager = selectedManager();
+      const g = arGender();
+      const reasons = reasonLines("ar");
+      const reasonsSection = 2;
+      const reasonHtml = reasons.length
+        ? numberedReasonsHtml(reasons, reasonsSection)
+        : "<p>__________</p>";
+      const hearingDay = formatWeekday(value("hearingDate"), "ar");
+      const hearingDateText = formatDate(value("hearingDate"), "ar");
+      return `
+        <p>${formatDate(value("letterDate"), "ar")}</p>
+        <p>بواسطة التسليم الشخصي / البريد / رسالة نصية</p>
+        <p>حضرة،<br><strong>${escapeHtml(value("employeeName", "__________"))}</strong><br>رقم الهوية: ${escapeHtml(value("employeeId", "__________"))}</p>
+        <p>تحية طيبة،</p>
+        <p class="subject">الموضوع: ${type.ar}</p>
+        ${numberedClauseHtml(1, `بتاريخ ${formatDate(value("startDate"), "ar")} ${g.started} عملك بوظيفة ${escapeHtml(value("role", "__________"))}، ومكان عملك هو ${escapeHtml(value("workplace", "__________"))}.`)}
+        ${numberedClauseHtml(2, `تدرس التعاونية إمكانية ${type.actionAr}، وذلك للأسباب التالية:`)}
+        ${reasonHtml}
+        ${numberedClauseHtml(3, `قبل اتخاذ أي قرار بشأنك، ستُعقد لك جلسة استماع. ولهذا الغرض أنت ${g.invited} إلى إرسال ${g.yourClaims} خطياً بخصوص إمكانية ${type.actionAr}، وإرفاق أي مستند قد يكون ذا صلة لبلورة موقف التعاونية. يجب إرسال الادعاءات الخطية حتى موعد أقصاه ${formatDate(value("writtenDeadline"), "ar")}.`)}
+        ${numberedClauseHtml(4, `ستُعقد جلسة الاستماع يوم ${hearingDay}، ${hearingDateText}، في الساعة ${escapeHtml(value("hearingTime", "__________"))}، في المكان: ${escapeHtml(value("hearingPlace", "__________"))}. سيشارك في الجلسة: ${escapeHtml(value("participants", "__________"))}.`)}
+        ${numberedClauseHtml(5, `${g.may} الحضور إلى جلسة الاستماع برفقة صديق، فرد من العائلة، ممثل أو محام، بشرط إبلاغ التعاونية مسبقاً برغبتك في الحضور بمرافقة أو تمثيل.`)}
+        ${numberedClauseHtml(6, `إذا ${g.wanted}، يمكنك التنازل عن حقك في جلسة الاستماع. في هذه الحالة، يرجى إبلاغنا بذلك مسبقاً.`)}
+        ${numberedClauseHtml(7, `إذا لم ${g.send} ردك الخطي كما ورد في هذا المكتوب، أو لم ${g.attend} إلى جلسة الاستماع، ${g.considered} التعاونية كمن ${g.waived} عن ${g.right} في إبداء الادعاءات قبل اتخاذ قرار ${g.regarding}.`)}
+        ${numberedClauseHtml(8, `بعد جلسة الاستماع سيتم اتخاذ قرار بشأنك.`)}
+        <p class="signature">مع الاحترام،<br><strong>${manager.name}</strong><br>${manager.role}<br>تعاونية أمل</p>
+      `;
+    }
+
+    function renderLetter() {
+      $("letter").setAttribute("dir", language === "ar" ? "rtl" : "rtl");
+      $("letter").innerHTML = language === "ar" ? renderArabicLetter() : renderHebrewLetter();
+      $("langHe").classList.toggle("active", language === "he");
+      $("langAr").classList.toggle("active", language === "ar");
+    }
+
+    function renderChecks() {
+      const missing = requiredFields.filter(([id]) => !value(id));
+      $("checks").innerHTML = requiredFields.map(([id, label]) => {
+        const ok = Boolean(value(id));
+        return `<div class="check ${ok ? "" : "missing"}"><span>${label}</span><strong>${ok ? "מלא" : "חסר"}</strong></div>`;
+      }).join("");
+      return missing;
+    }
+
+    function saveHistory() {
+      const missing = renderChecks();
+      if (missing.length) {
+        alert("חסרים פרטים לפני שמירה: " + missing.map(item => item[1]).join(", "));
+        return;
+      }
+      const record = collectForm();
+      record.id = "hearing-" + Date.now();
+      record.savedAt = new Date().toLocaleString("he-IL");
+      const history = loadHistory();
+      history.unshift(record);
+      localStorage.setItem("hearingLettersHistory", JSON.stringify(history.slice(0, 50)));
+      renderHistory();
+    }
+
+    function collectForm() {
+      const data = {};
+      document.querySelectorAll("input, select, textarea").forEach(input => {
+        data[input.id] = input.value;
+      });
+      return data;
+    }
+
+    function restoreForm(data) {
+      Object.keys(data).forEach(id => {
+        if ($(id)) $(id).value = data[id];
+      });
+      updateAll();
+    }
+
+    function loadHistory() {
+      try { return JSON.parse(localStorage.getItem("hearingLettersHistory") || "[]"); }
+      catch { return []; }
+    }
+
+    function renderHistory() {
+      const history = loadHistory();
+      $("history").innerHTML = history.length ? history.map(item => `
+        <div class="history-item">
+          <strong>${escapeHtml(item.employeeName || "ללא שם")}</strong>
+          <span>${escapeHtml((hearingTypes[item.hearingType] || hearingTypes.dismissal).he)} · ${escapeHtml(item.savedAt || "")}</span>
+          <button type="button" data-load="${item.id}">טעינה</button>
+        </div>
+      `).join("") : "<span class='hint'>עדיין לא נשמרו מכתבים.</span>";
+      document.querySelectorAll("[data-load]").forEach(button => {
+        button.addEventListener("click", () => {
+          const record = loadHistory().find(item => item.id === button.dataset.load);
+          if (record) restoreForm(record);
+        });
+      });
+    }
+
+    function updateAll() {
+      renderChecks();
+      renderLetter();
+    }
+
+    function fillExample() {
+      $("employeeName").value = "פרחה אבו אלהוא";
+      $("employeeId").value = "000000000";
+      $("role").value = "עובדת ניקיון";
+      $("workplace").value = "YMCA ירושלים";
+      $("startDate").value = "2023-06-13";
+      $("hearingDate").value = todayValue();
+      $("hearingTime").value = "12:00";
+      $("hearingPlace").value = "סניף ירושלים";
+      $("participants").value = "מנהלת הסניף ונציגת משאבי אנוש";
+      $("writtenDeadline").value = todayValue();
+      $("reason").value = "קצב עבודתך אינו תואם את דרישות מקום העבודה.\nהגיעו תלונות על צורת דיבור לא מכבדת.\nמספר רב של פעמים התייצבת באיחור לעבודה.";
+      updateAll();
+    }
+
+    function clearForm() {
+      document.querySelectorAll("input, textarea").forEach(input => input.value = "");
+      $("letterDate").value = todayValue();
+      updateAll();
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+      }[char]));
+    }
+
+    function printLetter() {
+      const originalTitle = document.title;
+      document.title = " ";
+      window.print();
+      setTimeout(() => {
+        document.title = originalTitle;
+      }, 500);
+    }
+
+    function init() {
+      $("manager").innerHTML = managers.map(item => `<option value="${item.id}">${item.name} - ${item.role}</option>`).join("");
+      $("letterDate").value = todayValue();
+      $("letterhead").src = window.AMAL_LETTERHEAD_BASE64 ? "data:image/png;base64," + window.AMAL_LETTERHEAD_BASE64 : "";
+      $("letterhead").style.display = window.AMAL_LETTERHEAD_BASE64 ? "block" : "none";
+      document.querySelectorAll("input, select, textarea").forEach(input => input.addEventListener("input", updateAll));
+      document.querySelectorAll("select, input[type='date'], input[type='time']").forEach(input => input.addEventListener("change", updateAll));
+      $("langHe").addEventListener("click", () => { language = "he"; renderLetter(); });
+      $("langAr").addEventListener("click", () => { language = "ar"; renderLetter(); });
+      $("printLetter").addEventListener("click", printLetter);
+      $("saveHistory").addEventListener("click", saveHistory);
+      $("fillExample").addEventListener("click", fillExample);
+      $("clearForm").addEventListener("click", clearForm);
+      renderHistory();
+      updateAll();
+    }
+
+    init();
+  </script>
+</body>
+</html>
